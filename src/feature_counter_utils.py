@@ -175,7 +175,7 @@ def count_named_entities(doc: Doc, entity_type: str = None) -> Union[int, Dict[s
     if entity_type:
         if entity_type in named_entity_map:
             return sum(1 for ent in doc.ents if ent.label_ == named_entity_map[entity_type])
-        elif entity_type == "except_date":
+        elif entity_type == "without_date":
             return sum(1 for ent in doc.ents if ent.label_ != "DATE")
         else:
             raise ValueError(f"Unknown named entity type: {entity_type}")
@@ -237,7 +237,7 @@ def count_superlatives(doc: Doc) -> int:
 
 def count_copula_verbs(doc: Doc) -> int:
     """Count copula (be) verbs."""
-    return sum(1 for token in doc if token.lemma_ == "be") #not only "be", could be "seem", "appear" etc. Need to be modified
+    return sum(1 for token in doc if token.lemma_ == "be" and (any(child.dep_ in ["attr", "acomp"] for child in token.children))) 
 
 # Pronoun counters
 def count_first_second_person_pronouns(doc: Doc) -> int:
@@ -295,7 +295,31 @@ def avg_tokens_per_sentence(doc: Doc) -> float:
         return 0.0
     return len(doc) / len(sentences)
 
-
+def normalize_features(doc: Doc, feature_counts: Dict[str, Any]) -> Dict[str, float]:
+    """
+    Normalize feature counts by the total number of tokens in the document.
+    """
+    # Get total number of tokens
+    total_tokens = len(doc)
+    
+    # If document is empty, return zeros
+    if total_tokens == 0:
+        return {feature: 0.0 for feature in feature_counts}
+    
+    # Normalize each feature count
+    normalized_counts = {}
+    for feature, count in feature_counts.items():
+        # Skip features that are already normalized (averages, etc.)
+        if feature.startswith("avg_"):
+            normalized_counts[feature] = count
+        # Skip features that are dictionaries (like pos_tags when no specific tag is provided)
+        elif isinstance(count, dict):
+            normalized_counts[feature] = count
+        # Normalize count features
+        else:
+            normalized_counts[feature] = count / total_tokens
+    
+    return normalized_counts
 
 # Create a feature extractor dictionary for easy access to all functions
 FEATURE_EXTRACTORS = {
@@ -307,6 +331,8 @@ FEATURE_EXTRACTORS = {
     "pos_proper_nouns": count_proper_nouns,
     "pos_adpositions": count_adpositions,
     "pos_interjections": count_interjections,
+    "pos_nouns": count_nouns,
+    "pos_pronouns": count_pronouns,
     "dep_labels": count_dep_labels,
     "morph_tags": count_morph_tags,
     "pos_bigrams": count_pos_bigrams,
@@ -326,7 +352,7 @@ FEATURE_EXTRACTORS = {
     "NEs_location_gpe": lambda doc: count_named_entities(doc, "location_gpe"),
     "NEs_organization": lambda doc: count_named_entities(doc, "organization"),
     "NEs_date": lambda doc: count_named_entities(doc, "date"),
-    "NEs_except_date": lambda doc: count_named_entities(doc, "except_date"),
+    "NEs_without_date": lambda doc: count_named_entities(doc, "without_date"),
     "token_VB": count_VB,
     "token_VBD": count_VBD,
     "token_VBG": count_VBG,
@@ -347,17 +373,27 @@ FEATURE_EXTRACTORS = {
     "copula_verbs": count_copula_verbs,
 }
 
-def extract_all_features(doc: Doc) -> Dict[str, Any]:
+def extract_all_features(doc: Doc, normalize: bool = False) -> Dict[str, Any]:
     """
     Extract all features from a document.
     Returns a dictionary with feature names as keys and their values.
     """
-    return {feature_name: extractor(doc) for feature_name, extractor in FEATURE_EXTRACTORS.items()}
+    feature_counts = {feature_name: extractor(doc) for feature_name, extractor in FEATURE_EXTRACTORS.items()}
+    
+    if normalize:
+        return normalize_features(doc, feature_counts)
+    else:
+        return feature_counts
 
-def extract_features(doc: Doc, feature_names: List[str]) -> Dict[str, Any]:
+def extract_features(doc: Doc, feature_names: List[str], normalize: bool = False) -> Dict[str, Any]:
     """
     Extract specified features from a document.
     Returns a dictionary with feature names as keys and their values.
     """
-    return {feature_name: FEATURE_EXTRACTORS[feature_name](doc) 
+    feature_counts = {feature_name: FEATURE_EXTRACTORS[feature_name](doc) 
             for feature_name in feature_names if feature_name in FEATURE_EXTRACTORS}
+    
+    if normalize:
+        return normalize_features(doc, feature_counts)
+    else:
+        return feature_counts

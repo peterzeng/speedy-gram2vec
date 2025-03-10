@@ -9,7 +9,7 @@ from sys import stderr
 
 
 class BiberGenreVectorizer:
-    def __init__(self, language: str):
+    def __init__(self, language: str, normalize: bool = False):
 
         self.biber_feature_types = [
             "first_second_person_pronouns", "third_person_pronouns", "pronoun_it",
@@ -25,6 +25,8 @@ class BiberGenreVectorizer:
             "punct_periods", "punct_questions", "punct_exclamations",
             "punct_commas"
             ]
+        
+        self.normalize = normalize
         
         if language == "en":
             try:
@@ -55,54 +57,15 @@ class BiberGenreVectorizer:
     '''
     def vectorize_text(self, text: Doc) -> pd.DataFrame:
         feature_counter = self.init_vectorizer(text)
-        
-        feature_counter["avg_chars_per_token"] = fcu.avg_chars_per_token(text)
-        feature_counter["avg_tokens_per_sentence"] = fcu.avg_tokens_per_sentence(text)
-        feature_counter["avg_noun_chunk_length"] = fcu.avg_noun_chunk_length(text)
-        feature_counter["avg_verb_chunk_length"] = fcu.avg_verb_chunk_length(text)
-        feature_counter["punct_periods"] = fcu.count_punctuation(text, "periods")
-        feature_counter["punct_questions"] = fcu.count_punctuation(text, "questions")
-        feature_counter["punct_exclamations"] = fcu.count_punctuation(text, "exclamations")
-        feature_counter["punct_commas"] = fcu.count_punctuation(text, "commas")
-        feature_counter["pos_adpositions"] = fcu.count_adpositions(text)
-        feature_counter["pos_interjections"] = fcu.count_interjections(text)
-        feature_counter["pos_adverbs"] = fcu.count_adverbs(text)
-        feature_counter["pos_adjectives"] = fcu.count_adjectives(text)
-        feature_counter["pos_nouns"] = fcu.count_nouns(text)
-        feature_counter["pos_verbs"] = fcu.count_verbs(text)
-        feature_counter["pos_proper_nouns"] = fcu.count_proper_nouns(text)
-        
-        # Add token tag counting
-        feature_counter["token_VB"] = fcu.count_VB(text)
-        feature_counter["token_VBD"] = fcu.count_VBD(text)
-        feature_counter["token_VBG"] = fcu.count_VBG(text)
-        feature_counter["token_VBN"] = fcu.count_VBN(text)
-        feature_counter["token_VBP"] = fcu.count_VBP(text)
-        feature_counter["token_VBZ"] = fcu.count_VBZ(text)
-        feature_counter["token_EX"] = fcu.count_EX(text)
-        feature_counter["token_FW"] = fcu.count_FW(text)
-        feature_counter["token_superlatives"] = fcu.count_superlatives(text)
-        
-        # Add pronoun counting
-        feature_counter["first_second_person_pronouns"] = fcu.count_first_second_person_pronouns(text)
-        feature_counter["third_person_pronouns"] = fcu.count_third_person_pronouns(text)
-        feature_counter["pronoun_it"] = fcu.count_pronoun_it(text)
-        feature_counter["pos_pronouns"] = fcu.count_pos_tags(text, "PRON")
-        
-        # Add named entity counting
-        feature_counter["named_entities"] = fcu.count_named_entities(text)
-        feature_counter["NEs_without_date"] = fcu.count_named_entities(text, "except_date")
-        feature_counter["NEs_person"] = fcu.count_named_entities(text, "person")
-        feature_counter["NEs_date"] = fcu.count_named_entities(text, "date")
-        feature_counter["NEs_location_loc"] = fcu.count_named_entities(text, "location_loc")
-        feature_counter["NEs_location_gpe"] = fcu.count_named_entities(text, "location_gpe")
-        feature_counter["NEs_organization"] = fcu.count_named_entities(text, "organization")
-        
-        # Add copula verbs counting
-        feature_counter["copula_verbs"] = fcu.count_copula_verbs(text)
 
+        # Get all token tags for analysis (not included in the final feature set)
+        all_token_tags = fcu.count_token_by_tag(text)
+        
+        # Extract all features
+        features = fcu.extract_features(text, self.biber_feature_types, normalize=self.normalize)
+        
         # Create a DataFrame with a single row containing all feature values
-        return pd.DataFrame([feature_counter], columns=self.biber_feature_types)
+        return pd.DataFrame([features], columns=self.biber_feature_types)
 
     def vectorize_directory(self, directory_path: Path) -> pd.DataFrame:
         pass
@@ -116,16 +79,26 @@ class BiberGenreVectorizer:
 
         return pd.concat(vectorized_docs)
     
-if __name__ == "__main__":
-    vectorizer = BiberGenreVectorizer("en")
+if __name__ == "__main__":    
+    #vectorizer = BiberGenreVectorizer("en", normalize=False)
+    normalized_vectorizer = BiberGenreVectorizer("en", normalize=True)
+    
     text = ["Hello, world! I like to kick things and punch the wall. I like to jump on the ground.",
             "If you're visiting this page, you're likely here because you're searching for a random sentence. Sometimes a random word just isn't enough, and that is where the random sentence generator comes into play. By inputting the desired number, you can make a list of as many random sentences as you want or need. Producing random sentences can be helpful in a number of different ways.",
-            "This dark chocolate is the best chocolate I have ever had!🥳",
-            "My cat is smaller than my dog...",
-            "This city is more beautiful than that city.",
-            "Maria lives in Mexico City on January 1st, 2023.",
-            "Apple Inc. announced a new product yesterday.",
-            "He is playing with his dog."]
+            "This dark chocolate is the best chocolate I have ever had!🥳",  
+            "My cat is smaller than my dog...",  
+            "This city is more beautiful than that city.", 
+            "Maria lives in Mexico City on January 1st, 2023.",  
+            "Apple Inc. announced a new product yesterday.",  
+            "She is a doctor. The sky was blue. They are happy.",  
+            "What is the capital of France??!"
+            ]  
     
-    doc = vectorizer.process_texts(text)
-    doc.to_csv("vectorized_docs.csv", index=False)
+
+    
+    normalized_features = normalized_vectorizer.process_texts(text)
+    normalized_features.to_csv("vectorized_docs_normalized.csv", index=False)
+    
+    #doc = vectorizer.process_texts(text)
+    #doc.to_csv("vectorized_docs.csv", index=False)
+
