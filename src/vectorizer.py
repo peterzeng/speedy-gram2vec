@@ -42,7 +42,6 @@ class BiberGenreVectorizer:
                 from spacy.cli import download
                 download("ru_core_news_lg")
     
-    # 0 0 0 0 0 0 0 0 0 0 
     def init_vectorizer(self, text: str) -> pd.Series:
         feature_counter = {}
         for feature in self.biber_feature_types:
