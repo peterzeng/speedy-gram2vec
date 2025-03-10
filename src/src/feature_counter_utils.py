@@ -85,12 +85,6 @@ def count_adpositions(doc: Doc) -> int:
 def count_interjections(doc: Doc) -> int:
     return count_pos_tags(doc, "INTJ")
 
-def count_nouns(doc: Doc) -> int:
-    return count_pos_tags(doc, "NOUN")
-
-def count_pronouns(doc: Doc) -> int:
-    return count_pos_tags(doc, "PRON")
-
 # Dependency label counter
 def count_dep_labels(doc: Doc, dep_label: str = None) -> Union[int, Dict[str, int]]:
     """
@@ -164,80 +158,19 @@ def count_named_entities(doc: Doc, entity_type: str = None) -> Union[int, Dict[s
     If entity_type is provided, count occurrences of that specific entity type.
     Otherwise, return the total count of all named entities.
     """
-    named_entity_map = {
-        "person": "PERSON",
-        "location_loc": "LOC",
-        "location_gpe": "GPE",
-        "organization": "ORG",
-        "date": "DATE"
-    }
-    
     if entity_type:
-        if entity_type in named_entity_map:
-            return sum(1 for ent in doc.ents if ent.label_ == named_entity_map[entity_type])
-        elif entity_type == "except_date":
-            return sum(1 for ent in doc.ents if ent.label_ != "DATE")
-        else:
-            raise ValueError(f"Unknown named entity type: {entity_type}")
+        return sum(1 for ent in doc.ents if ent.label_ == entity_type)
     else:
         return len(doc.ents)
 
+def count_named_entities_without_date(doc: Doc) -> int:
+    """Count named entities excluding DATE entities."""
+    return sum(1 for ent in doc.ents if ent.label_ != "DATE")
+
 # Token-specific counters based on fine-grained tags
-def count_token_by_tag(doc: Doc, tag: str = None) -> Union[int, Dict[str, int]]:
-    """
-    Count tokens with specific token_tags in a document.
-    If tag is provided, count occurrences of that specific tag.
-    Otherwise, return a dictionary of all token_tags and their counts.
-    """
-    if tag:
-        return sum(1 for token in doc if token.tag_ == tag)
-    else:
-        return dict(Counter([token.tag_ for token in doc]))
-
-# Specific verb tag counters
-def count_VB(doc: Doc) -> int:
-    """Count base form verbs (VB)."""
-    return count_token_by_tag(doc, "VB")
-
-def count_VBD(doc: Doc) -> int:
-    """Count past tense verbs (VBD)."""
-    return count_token_by_tag(doc, "VBD")
-
-def count_VBG(doc: Doc) -> int:
-    """Count gerund or present participle verbs (VBG)."""
-    return count_token_by_tag(doc, "VBG")
-
-def count_VBN(doc: Doc) -> int:
-    """Count past participle verbs (VBN)."""
-    return count_token_by_tag(doc, "VBN")
-
-def count_VBP(doc: Doc) -> int:
-    """Count non-3rd person singular present verbs (VBP)."""
-    return count_token_by_tag(doc, "VBP")
-
-def count_VBZ(doc: Doc) -> int:
-    """Count 3rd person singular present verbs (VBZ)."""
-    return count_token_by_tag(doc, "VBZ")
-
-def count_EX(doc: Doc) -> int:
-    """Count existential 'there' (EX)."""
-    return count_token_by_tag(doc, "EX")
-
-def count_FW(doc: Doc) -> int:
-    """Count foreign words (FW)."""
-    return count_token_by_tag(doc, "FW")
-
-def count_PRP(doc: Doc) -> int:
-    """Count personal pronouns (PRP)."""
-    return count_token_by_tag(doc, "PRP")
-
-def count_superlatives(doc: Doc) -> int:
-    """Count superlative adjectives (JJS) and adverbs (RBS)."""
-    return sum(1 for token in doc if token.tag_ == "JJS" or token.tag_ == "RBS")
-
-def count_copula_verbs(doc: Doc) -> int:
-    """Count copula (be) verbs."""
-    return sum(1 for token in doc if token.lemma_ == "be") #not only "be", could be "seem", "appear" etc. Need to be modified
+def count_token_by_tag(doc: Doc, tag: str) -> int:
+    """Count tokens with a specific fine-grained tag."""
+    return sum(1 for token in doc if token.tag_ == tag)
 
 # Pronoun counters
 def count_first_second_person_pronouns(doc: Doc) -> int:
@@ -256,6 +189,9 @@ def count_third_person_pronouns(doc: Doc) -> int:
 
 def count_pronoun_it(doc: Doc) -> int:
     """Count occurrences of the pronoun 'it'."""
+    for token in Doc:
+        if token.pos_ == "PRON" and token.text.lower() == "it":
+            pronoun_counter["pronoun_it"] += 1
     return sum(1 for token in doc if token.text.lower() == "it")
 
 # Average length metrics
@@ -295,12 +231,9 @@ def avg_tokens_per_sentence(doc: Doc) -> float:
         return 0.0
     return len(doc) / len(sentences)
 
-
-
 # Create a feature extractor dictionary for easy access to all functions
 FEATURE_EXTRACTORS = {
     "pos_tags": count_pos_tags,
-    "token_tags": count_token_by_tag,
     "pos_verbs": count_verbs,
     "pos_adjectives": count_adjectives,
     "pos_adverbs": count_adverbs,
@@ -321,22 +254,23 @@ FEATURE_EXTRACTORS = {
     "punct_questions": lambda doc: count_punctuation(doc, "questions"),
     "tokens": lambda doc: len(doc),
     "named_entities": count_named_entities,
-    "NEs_person": lambda doc: count_named_entities(doc, "person"),
-    "NEs_location_loc": lambda doc: count_named_entities(doc, "location_loc"),
-    "NEs_location_gpe": lambda doc: count_named_entities(doc, "location_gpe"),
-    "NEs_organization": lambda doc: count_named_entities(doc, "organization"),
-    "NEs_date": lambda doc: count_named_entities(doc, "date"),
-    "NEs_except_date": lambda doc: count_named_entities(doc, "except_date"),
-    "token_VB": count_VB,
-    "token_VBD": count_VBD,
-    "token_VBG": count_VBG,
-    "token_VBN": count_VBN,
-    "token_VBP": count_VBP,
-    "token_VBZ": count_VBZ,
-    "token_EX": count_EX,
-    "token_FW": count_FW,
-    "token_PRP": count_PRP,
-    "token_superlatives": count_superlatives,
+    "NEs_person": lambda doc: count_named_entities(doc, "PERSON"),
+    "NEs_location_loc": lambda doc: count_named_entities(doc, "LOC"),
+    "NEs_location_gpe": lambda doc: count_named_entities(doc, "GPE"),
+    "NEs_organization": lambda doc: count_named_entities(doc, "ORG"),
+    "NEs_date": lambda doc: count_named_entities(doc, "DATE"),
+    "NEs_without_date": count_named_entities_without_date,
+    "token_VB": lambda doc: count_token_by_tag(doc, "VB"),
+    "token_VBD": lambda doc: count_token_by_tag(doc, "VBD"),
+    "token_VBG": lambda doc: count_token_by_tag(doc, "VBG"),
+    "token_VBN": lambda doc: count_token_by_tag(doc, "VBN"),
+    "token_VBP": lambda doc: count_token_by_tag(doc, "VBP"),
+    "token_VBZ": lambda doc: count_token_by_tag(doc, "VBZ"),
+    "token_EX": lambda doc: count_token_by_tag(doc, "EX"),
+    "token_FW": lambda doc: count_token_by_tag(doc, "FW"),
+    "token_PRP": lambda doc: count_token_by_tag(doc, "PRP"),
+    "token_superlatives": lambda doc: sum(1 for token in doc if token.tag_.endswith("S")),
+    "token_comparatives": lambda doc: sum(1 for token in doc if token.tag_.endswith("R")),
     "first_second_person_pronouns": count_first_second_person_pronouns,
     "third_person_pronouns": count_third_person_pronouns,
     "pronoun_it": count_pronoun_it,
@@ -344,7 +278,6 @@ FEATURE_EXTRACTORS = {
     "avg_verb_chunk_length": avg_verb_chunk_length,
     "avg_chars_per_token": avg_chars_per_token,
     "avg_tokens_per_sentence": avg_tokens_per_sentence,
-    "copula_verbs": count_copula_verbs,
 }
 
 def extract_all_features(doc: Doc) -> Dict[str, Any]:

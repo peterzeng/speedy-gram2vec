@@ -1,3 +1,9 @@
-first_second_person_pronouns,third_person_pronouns,pronoun_it,copula_verbs,named_entities,NEs_without_date,token_VB,token_VBD,token_VBG,token_VBN,token_VBP,token_VBZ,pos_nouns,pos_verbs,pos_proper_nouns,pos_adjectives,pos_adverbs,token_superlatives,pos_pronouns,pos_adpositions,token_FW,token_EX,pos_interjections,NEs_person,NEs_date,NEs_location_loc,NEs_organization,avg_noun_chunk_length,avg_verb_chunk_length,avg_tokens_per_sentence,avg_chars_per_token,punct_periods,punct_questions,punct_exclamations,punct_commas
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1.4,2.2,7.333333333333333,3.090909090909091,2,0,1,1
-0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2.0,2.3333333333333335,19.0,4.144736842105263,4,0,0,3
+first_second_person_pronouns,third_person_pronouns,pronoun_it,copula_verbs,named_entities,NEs_without_date,token_VB,token_VBD,token_VBG,token_VBN,token_VBP,token_VBZ,pos_nouns,pos_verbs,pos_proper_nouns,pos_adjectives,pos_adverbs,token_superlatives,pos_pronouns,pos_adpositions,token_FW,token_EX,pos_interjections,NEs_person,NEs_date,NEs_location_loc,NEs_location_gpe,NEs_organization,avg_noun_chunk_length,avg_verb_chunk_length,avg_tokens_per_sentence,avg_chars_per_token,punct_periods,punct_questions,punct_exclamations,punct_commas
+2,0,0,0,0,0,3,0,0,0,2,0,4,5,0,0,0,0,2,1,0,0,1,0,0,0,0,0,1.4,2.2,7.333333333333333,3.090909090909091,2,0,1,1
+5,0,0,6,0,0,2,0,4,1,5,3,12,9,0,9,5,0,6,6,0,0,0,0,0,0,0,0,2.0,2.3333333333333335,19.0,4.144736842105263,4,0,0,3
+1,0,0,1,0,0,0,1,0,1,1,1,2,2,0,2,1,1,1,0,0,0,0,0,0,0,0,0,2.3333333333333335,1.5,13.0,3.769230769230769,0,0,1,0
+2,0,0,1,0,0,0,0,0,0,0,1,2,0,0,1,0,0,2,1,0,0,0,0,0,0,0,0,2.0,0.0,8.0,3.25,0,0,0,0
+0,0,0,1,0,0,0,0,0,0,0,1,2,0,0,1,1,0,0,1,0,0,0,0,0,0,0,0,2.0,0.0,9.0,4.0,1,0,0,0
+0,0,0,0,4,2,0,0,0,0,0,1,1,1,4,0,0,0,0,2,0,0,0,1,2,0,1,0,1.6666666666666667,3.0,11.0,3.6363636363636362,1,0,0,1
+0,0,0,0,2,1,0,1,0,0,0,0,2,1,2,1,0,0,0,0,0,0,0,0,1,0,0,1,2.5,2.0,8.0,4.875,1,0,0,0
+0,2,0,1,0,0,0,0,1,0,0,1,1,1,0,0,0,0,2,1,0,0,0,0,0,0,0,0,1.5,3.0,7.0,3.142857142857143,1,0,0,0
