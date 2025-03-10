@@ -1,0 +1,13 @@
+advise
+ask
+demand
+insist
+move
+order 
+propose
+recommend
+request
+require
+stipulate
+suggest
+urge

@@ -19,11 +19,10 @@ class BiberGenreVectorizer:
             "pos_adverbs", "token_superlatives", "pos_pronouns",
             "pos_adpositions", "token_FW", "token_EX", "pos_interjections",
             "NEs_person", "NEs_date", "NEs_location_loc", "NEs_location_gpe", "NEs_organization",
-            ### NEED OWEN TO TELL US SUASIVE AND STATIVE VERBS ###
+            "suasive_verbs", "stative_verbs",
             "avg_noun_chunk_length", "avg_verb_chunk_length",
             "avg_tokens_per_sentence", "avg_chars_per_token",
-            "punct_periods", "punct_questions", "punct_exclamations",
-            "punct_commas"
+            "punct_periods", "punct_questions", "punct_exclamations", "punct_commas"
             ]
         
         self.normalize = normalize
@@ -90,7 +89,10 @@ if __name__ == "__main__":
             "Maria lives in Mexico City on January 1st, 2023.",  
             "Apple Inc. announced a new product yesterday.",  
             "She is a doctor. The sky was blue. They are happy.",  
-            "What is the capital of France??!"
+            "What is the capital of France??!",
+            "I suggest you try the new restaurant. The manager insists that you order the special. We recommend the chocolate cake for dessert.",  
+            "I know the answer. She believes in magic. The box contains three items. This book belongs to me. The recipe involves using fresh ingredients.",  
+            "He weighed the bananas carefully. The bananas weigh 2 pounds."
             ]  
     
 

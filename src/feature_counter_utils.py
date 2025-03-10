@@ -5,6 +5,8 @@
 from spacy.tokens import Doc
 from typing import Dict, List, Callable, Any, Union
 from collections import Counter
+from pathlib import Path
+from sys import stderr
 
 # features:
 # pos_tags"pos_tags", 
@@ -258,6 +260,58 @@ def count_pronoun_it(doc: Doc) -> int:
     """Count occurrences of the pronoun 'it'."""
     return sum(1 for token in doc if token.text.lower() == "it")
 
+def count_suasive_verbs(doc: Doc) -> int:
+    """
+    The list of suasive verbs is read from a text file.
+    """
+    suasive_verbs_file = Path(__file__).parent.parent / "vocab" / "suasive-verbs.txt"
+
+    with open(suasive_verbs_file, 'r', encoding='utf-8') as f:
+            suasive_verbs = [line.strip() for line in f if line.strip()]
+            
+    return sum(1 for token in doc if token.lemma_.lower() in suasive_verbs)
+
+def count_stative_verbs(doc: Doc) -> int:
+    """
+    The list of stative verbs is read from a text file.
+    
+    For ambiguous verbs (marked with "(amb)" in the .txt file), we check if it's a transitive verb 
+    (=with a direct object) or not. If it is, we don't count it as stative.
+    For example:
+    - "He weighed the bananas" - 'weighed' is transitive, not counted as stative
+    - "The bananas weigh 2 lbs" - 'weigh' is intransitive, counted as stative
+    """
+    stative_verbs_file = Path(__file__).parent.parent / "vocab" / "stative-verbs.txt"
+    
+    with open(stative_verbs_file, 'r', encoding='utf-8') as f:
+            
+            stative_verbs = []
+            ambiguous_verbs = []
+            
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                    
+                if "(amb)" in line:
+                    verb = line.replace("(amb)", "").strip()
+                    ambiguous_verbs.append(verb)
+                else:  
+                    stative_verbs.append(line) # Add to unambiguous stative verbs list
+    
+    # count stative verbs
+    return sum(
+        1 for token in doc if (
+            token.lemma_.lower() in stative_verbs or
+            (token.lemma_.lower() in ambiguous_verbs and not (
+                any(child.dep_ == "dobj" for child in token.children) and
+                any(child.dep_ == "nsubj" and 
+                    (child.tag_ == "PRP" or child.ent_type_ == "PERSON")
+                    for child in token.children)
+            ))
+        )
+    )
+
 # Average length metrics
 def avg_noun_chunk_length(doc: Doc) -> float:
     """Calculate average length of noun chunks in tokens."""
@@ -371,6 +425,8 @@ FEATURE_EXTRACTORS = {
     "avg_chars_per_token": avg_chars_per_token,
     "avg_tokens_per_sentence": avg_tokens_per_sentence,
     "copula_verbs": count_copula_verbs,
+    "suasive_verbs": count_suasive_verbs,
+    "stative_verbs": count_stative_verbs,
 }
 
 def extract_all_features(doc: Doc, normalize: bool = False) -> Dict[str, Any]:
