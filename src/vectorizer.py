@@ -88,18 +88,9 @@ if __name__ == "__main__":
             "I suggest you try the new restaurant. The manager insists that you order the special. We recommend the chocolate cake for dessert.",  
             "I know the answer. She believes in magic. The box contains three items. This book belongs to me. The recipe involves using fresh ingredients.",  
             "He weighed the bananas carefully. The bananas weigh 2 pounds.",
-<<<<<<< HEAD
             "They see this <PERSON> and that <PERSON>."
             ]  
-    
 
-=======
-            "It is a good idea to buy a car.",
-            "<PERSON> is a doctor."
-            ]  
-    
-    
->>>>>>> 63cb720874956591263b3dc840d905013745199a
     normalized_features = normalized_vectorizer.process_texts(text)
     normalized_features.to_csv("vectorized_docs_normalized.csv", index=False)
     
