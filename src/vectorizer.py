@@ -22,7 +22,7 @@ class BiberGenreVectorizer:
             "suasive_verbs", "stative_verbs",
             "avg_noun_chunk_length", "avg_verb_chunk_length",
             "avg_tokens_per_sentence", "avg_chars_per_token",
-            "punct_periods", "punct_questions", "punct_exclamations", "punct_commas"
+            "punct_periods", "punct_questions", "punct_exclamations", "punct_commas", "sent_punct_period", "sent_punct_question", "sent_punct_exclamation"
             ]
         
         self.normalize = normalize
@@ -92,11 +92,11 @@ if __name__ == "__main__":
             "What is the capital of France??!",
             "I suggest you try the new restaurant. The manager insists that you order the special. We recommend the chocolate cake for dessert.",  
             "I know the answer. She believes in magic. The box contains three items. This book belongs to me. The recipe involves using fresh ingredients.",  
-            "He weighed the bananas carefully. The bananas weigh 2 pounds."
+            "He weighed the bananas carefully. The bananas weigh 2 pounds.",
+            "They see this <PERSON> and that <PERSON>."
             ]  
     
 
-    
     normalized_features = normalized_vectorizer.process_texts(text)
     normalized_features.to_csv("vectorized_docs_normalized.csv", index=False)
     

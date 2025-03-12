@@ -173,16 +173,16 @@ def count_named_entities(doc: Doc, entity_type: str = None) -> Union[int, Dict[s
         "organization": "ORG",
         "date": "DATE"
     }
-    
+
     if entity_type:
         if entity_type in named_entity_map:
-            return sum(1 for ent in doc.ents if ent.label_ == named_entity_map[entity_type])
+            return sum(1 for ent in doc.ents if ent.label_ == named_entity_map[entity_type]) +\
+                   sum(1 for token in doc if token.text == 'PERSON')
         elif entity_type == "without_date":
-            return sum(1 for ent in doc.ents if ent.label_ != "DATE")
-        else:
-            raise ValueError(f"Unknown named entity type: {entity_type}")
+            return sum(1 for ent in doc.ents if ent.label_ != "DATE") +\
+                   sum(1 for token in doc if token.text == 'PERSON')
     else:
-        return len(doc.ents)
+        return len(doc.ents) + sum(1 for token in doc if token.text == 'PERSON')
 
 # Token-specific counters based on fine-grained tags
 def count_token_by_tag(doc: Doc, tag: str = None) -> Union[int, Dict[str, int]]:
@@ -366,6 +366,8 @@ def normalize_features(doc: Doc, feature_counts: Dict[str, Any]) -> Dict[str, fl
         # Skip features that are already normalized (averages, etc.)
         if feature.startswith("avg_"):
             normalized_counts[feature] = count
+        elif feature.startswith("sent_"):
+            normalized_counts[feature] = count / len(list(doc.sents))
         # Skip features that are dictionaries (like pos_tags when no specific tag is provided)
         elif isinstance(count, dict):
             normalized_counts[feature] = count
@@ -399,6 +401,9 @@ FEATURE_EXTRACTORS = {
     "punct_semicolons": lambda doc: count_punctuation(doc, "semicolons"),
     "punct_exclamations": lambda doc: count_punctuation(doc, "exclamations"),
     "punct_questions": lambda doc: count_punctuation(doc, "questions"),
+    "sent_punct_period": lambda doc: count_punctuation(doc, "periods"),
+    "sent_punct_question": lambda doc: count_punctuation(doc, "questions"),
+    "sent_punct_exclamation": lambda doc: count_punctuation(doc, "exclamations"),
     "tokens": lambda doc: len(doc),
     "named_entities": count_named_entities,
     "NEs_person": lambda doc: count_named_entities(doc, "person"),
