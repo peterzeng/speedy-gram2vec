@@ -176,8 +176,11 @@ def count_named_entities(doc: Doc, entity_type: str = None) -> Union[int, Dict[s
 
     if entity_type:
         if entity_type in named_entity_map:
-            return sum(1 for ent in doc.ents if ent.label_ == named_entity_map[entity_type]) +\
-                   sum(1 for token in doc if token.text == 'PERSON')
+            entity_count = sum(1 for ent in doc.ents if ent.label_ == named_entity_map[entity_type])
+            if entity_type == "person": 
+                person_token_count = sum(1 for token in doc if token.text == 'PERSON')
+                return entity_count + person_token_count
+            return entity_count
         elif entity_type == "without_date":
             return sum(1 for ent in doc.ents if ent.label_ != "DATE") +\
                    sum(1 for token in doc if token.text == 'PERSON')

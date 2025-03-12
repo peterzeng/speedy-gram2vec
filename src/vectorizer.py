@@ -88,7 +88,8 @@ if __name__ == "__main__":
             "I suggest you try the new restaurant. The manager insists that you order the special. We recommend the chocolate cake for dessert.",  
             "I know the answer. She believes in magic. The box contains three items. This book belongs to me. The recipe involves using fresh ingredients.",  
             "He weighed the bananas carefully. The bananas weigh 2 pounds.",
-            "They see this <PERSON> and that <PERSON>."
+            "They see this <PERSON> and that <PERSON>.",
+            "<PERSON> lives in Mexico and works at Apple Inc."
             ]  
 
     normalized_features = normalized_vectorizer.process_texts(text)
