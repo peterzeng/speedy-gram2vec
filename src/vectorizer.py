@@ -1,7 +1,5 @@
-from collections import Counter
 import pandas as pd
 from pathlib import Path
-import numpy as np
 import spacy
 from spacy.tokens import Doc
 import feature_counter_utils as fcu
@@ -54,11 +52,7 @@ class BiberGenreVectorizer:
         returns a dataframe with the feature names as column names and the feature values as the values
     '''
     def vectorize_text(self, text: Doc) -> pd.DataFrame:
-        feature_counter = self.init_vectorizer(text)
 
-        # Get all token tags for analysis (not included in the final feature set)
-        all_token_tags = fcu.count_token_by_tag(text)
-        
         # Extract all features
         features = fcu.extract_features(text, self.biber_feature_types, normalize=self.normalize)
         
@@ -87,16 +81,25 @@ if __name__ == "__main__":
             "My cat is smaller than my dog...",  
             "This city is more beautiful than that city.", 
             "Maria lives in Mexico City on January 1st, 2023.",  
+            "She lives in Mexico City on January 1st, 2023.",  
             "Apple Inc. announced a new product yesterday.",  
             "She is a doctor. The sky was blue. They are happy.",  
             "What is the capital of France??!",
             "I suggest you try the new restaurant. The manager insists that you order the special. We recommend the chocolate cake for dessert.",  
             "I know the answer. She believes in magic. The box contains three items. This book belongs to me. The recipe involves using fresh ingredients.",  
             "He weighed the bananas carefully. The bananas weigh 2 pounds.",
+<<<<<<< HEAD
             "They see this <PERSON> and that <PERSON>."
             ]  
     
 
+=======
+            "It is a good idea to buy a car.",
+            "<PERSON> is a doctor."
+            ]  
+    
+    
+>>>>>>> 63cb720874956591263b3dc840d905013745199a
     normalized_features = normalized_vectorizer.process_texts(text)
     normalized_features.to_csv("vectorized_docs_normalized.csv", index=False)
     
