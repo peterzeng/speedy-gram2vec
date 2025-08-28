@@ -1,0 +1,10 @@
+it-cleft
+pseudo-cleft
+all-cleft
+there-cleft
+if-because-cleft
+passive
+subj-relcl
+obj-relcl
+tag-question
+coordinate-clause

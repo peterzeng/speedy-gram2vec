@@ -1,0 +1,4 @@
+pandas>=2.1.0
+numpy>=1.24.0
+spacy>=3.7.0
+emoji>=2.8.0
