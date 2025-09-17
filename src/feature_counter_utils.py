@@ -48,7 +48,8 @@ from sys import stderr
 # "token_PRP", # Personal pronoun
 # "token_superlatives", # Superlative
 # "token_comparatives", # Comparative
-# "first_second_person_pronouns", # First or second person pronoun
+# "first_person_pronouns", # First person pronoun
+# "second_person_pronouns", # Second person pronoun
 # "third_person_pronouns", # Third person pronoun
 # "pronoun_it",
 # "avg_noun_chunk_length",
@@ -245,12 +246,16 @@ def count_copula_verbs(doc: Doc) -> int:
     return sum(1 for token in doc if token.lemma_ == "be" and (any(child.dep_ in ["attr", "acomp"] for child in token.children))) 
 
 # Pronoun counters
-def count_first_second_person_pronouns(doc: Doc) -> int:
-    """Count first and second person pronouns."""
-    first_second_pronouns = ["i", "me", "my", "mine", "myself", 
-                            "we", "us", "our", "ours", "ourselves",
-                            "you", "your", "yours", "yourself", "yourselves"]
-    return sum(1 for token in doc if token.text.lower() in first_second_pronouns)
+def count_first_person_pronouns(doc: Doc) -> int:
+    """Count first person pronouns."""
+    first_person_pronouns = ["i", "me", "my", "mine", "myself",
+                            "we", "us", "our", "ours", "ourselves"]
+    return sum(1 for token in doc if token.text.lower() in first_person_pronouns)
+
+def count_second_person_pronouns(doc: Doc) -> int:
+    """Count second person pronouns."""
+    second_person_pronouns = ["you", "your", "yours", "yourself", "yourselves"]
+    return sum(1 for token in doc if token.text.lower() in second_person_pronouns)
 
 def count_third_person_pronouns(doc: Doc) -> int:
     """Count third person pronouns."""
@@ -425,7 +430,8 @@ FEATURE_EXTRACTORS = {
     "token_FW": count_FW,
     "token_PRP": count_PRP,
     "token_superlatives": count_superlatives,
-    "first_second_person_pronouns": count_first_second_person_pronouns,
+    "first_person_pronouns": count_first_person_pronouns,
+    "second_person_pronouns": count_second_person_pronouns,
     "third_person_pronouns": count_third_person_pronouns,
     "pronoun_it": count_pronoun_it,
     "avg_noun_chunk_length": avg_noun_chunk_length,
