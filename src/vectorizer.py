@@ -88,6 +88,9 @@ class Gram2VecVectorizer:
             "punctuation": self._extract_punctuation,
             "letters": self._extract_letters,
             "tokens": self._extract_tokens,
+            "types": self._extract_types,
+            "ttr": self._extract_ttr,
+            "avg_sent_len": self._extract_avg_sent_len,
             "named_entities": self._extract_named_entities,
             "suasive_verbs": self._extract_suasive_verbs,
             "stative_verbs": self._extract_stative_verbs,
@@ -175,6 +178,28 @@ class Gram2VecVectorizer:
         # This will be normalized by document length if normalize=True
         token_count = len(doc)
         return Feature("tokens", Counter({"count": token_count}), [])
+
+    ###!!!###
+    def _extract_types(self, doc: Doc) -> Feature:
+        """Extract type count (normalized by document length)."""
+        type_count = len({token.text for token in doc})
+        return Feature("types", Counter({"count": type_count}), [])
+    
+    def _extract_ttr(self, doc: Doc) -> Feature:
+        """Extract type-token ratio (TTR)."""
+        token_count = len(doc)
+        type_count = len({token.text for token in doc})
+        ttr = type_count / token_count if token_count > 0 else 0.0
+        return Feature("ttr", Counter({"ratio": ttr}), [])
+    
+    def _extract_avg_sent_len(self, doc: Doc) -> Feature:
+        """Extract average sentence length."""
+        token_count = len(doc)
+        sents = list(doc.sents)
+        sent_count = len(sents)
+        avg_sent_len = token_count / sent_count if sent_count > 0 else 0.0
+        return Feature("avg_sent_len", Counter({"avg": avg_sent_len}), [])
+    ###!!!###
     
     def _extract_named_entities(self, doc: Doc) -> Feature:
         """Extract named entities."""
@@ -247,6 +272,9 @@ default_config = {
     "punctuation": 1,
     "letters": 1,
     "tokens": 1,
+    "types": 1,
+    "ttr": 1,
+    "avg_sent_len": 1,
     "named_entities": 1,
     "suasive_verbs": 1,
     "stative_verbs": 1,
