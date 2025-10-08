@@ -303,8 +303,7 @@ class Gram2VecVectorizer:
         # For now, we'll return an empty DataFrame
         return pd.DataFrame()
     
-    def from_documents(self, documents: List[str], author_ids: List[str] = None, 
-                      document_ids: List[str] = None) -> pd.DataFrame:
+    def from_documents(self, documents: List[str], author_ids: List[str] = None, document_ids: List[str] = None) -> pd.DataFrame:
         """Vectorize documents with optional author and document IDs."""
         df = self.vectorize_documents(documents)
         
@@ -360,14 +359,22 @@ if __name__ == "__main__":
         "However, <PERSON> lives in Mexico and works at Apple Inc. Nevertheless, he persisted. However, he died later.",
     ]
 
-    parallel_texts = ""
+    parallel_texts = []
+    author_ids = []
+    doc_ids = []
     
     # Vectorize documents
-    vectors = vectorizer.vectorize_documents(test_texts)
-    #vectors = vectorizer.vectorize_documents(parallel_texts)
+    #test_vectors = vectorizer.vectorize_documents(test_texts)
+    vectors = vectorizer.from_documents(parallel_texts, author_ids, doc_ids)
+
+    """
+        def from_documents(self, documents: List[str], author_ids: List[str] = None, 
+                      document_ids: List[str] = None) -> pd.DataFrame:
+    """
     
     # Save to CSV
-    vectors.to_csv("vectorized_docs_normalized.csv", index=False)
+    #test_vectors.to_csv("vectorized_docs_normalized.csv", index=False)
+    vectors.to_csv("parallel_vectorized_docs.csv", index=False)
     print(f"Vectorized {len(test_texts)} documents with {len(vectors.columns)} features")
     print(f"Features: {list(vectors.columns[:10])}...")  # Show first 10 features
 
