@@ -184,21 +184,6 @@ class Gram2VecVectorizer:
         """Extract type count (normalized by document length)."""
         type_count = len({token.text for token in doc})
         return Feature("types", Counter({"count": type_count}), [])
-    
-    def _extract_ttr(self, doc: Doc) -> Feature:
-        """Extract type-token ratio (TTR)."""
-        token_count = len(doc)
-        type_count = len({token.text for token in doc})
-        ttr = type_count / token_count if token_count > 0 else 0.0
-        return Feature("ttr", Counter({"ratio": ttr}), [])
-    
-    def _extract_avg_sent_len(self, doc: Doc) -> Feature:
-        """Extract average sentence length."""
-        token_count = len(doc)
-        sents = list(doc.sents)
-        sent_count = len(sents)
-        avg_sent_len = token_count / sent_count if sent_count > 0 else 0.0
-        return Feature("avg_sent_len", Counter({"avg": avg_sent_len}), [])
     ###!!!###
     
     def _extract_named_entities(self, doc: Doc) -> Feature:

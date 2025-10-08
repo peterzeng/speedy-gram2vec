@@ -357,6 +357,15 @@ def avg_tokens_per_sentence(doc: Doc) -> float:
         return 0.0
     return len(doc) / len(sentences)
 
+###!!!### EDIT
+def avg_ttr(self, doc: Doc) -> float:
+    """Extract type-token ratio (TTR)."""
+    token_count = len(doc)
+    type_count = len({token.text for token in doc})
+    ttr = type_count / token_count if token_count > 0 else 0.0
+    return 
+###!!!###
+
 def normalize_features(doc: Doc, feature_counts: Dict[str, Any]) -> Dict[str, float]:
     """
     Normalize feature counts by the total number of tokens in the document.

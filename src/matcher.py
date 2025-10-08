@@ -25,6 +25,7 @@ class SyntaxRegexMatcher:
         if language == "en":
             print("Using English constructions")
             self.patterns = {
+                "parenthetical": r"\([^-]*-[^-]*-[^-]*-ROOT(?!(.*-VB.*))*\([^-]*-[^-]*-[^-]*-nsubj(?!(.*-VB.*))*\([^-]*-[^-]*-[^-]*-punct\).*\([^-]*-[^-]*-[^-]*-[^)]*\([^-]*-[^-]*-[^-]*-(appos|advmod|mark|prep).*\([^-]*-[^-]*-[^-]*-punct\)",
                 "it-cleft": r"\([^-]*-be-[^-]*-[^-]*.*\([iI]t-it-PRP-nsubj\).*\([^-]*-[^-]*-NN[^-]*-attr.*\([^-]*-[^-]*-VB[^-]*-(relcl|advcl)",
                 "pseudo-cleft": r"\([^-]*-be-[^-]*-[^-]*.*\([^-]*-[^-]*-(WP|WRB)-(dobj|advmod)",
                 "all-cleft": r"(\([^-]*-be-[^-]*-[^-]*.*\([^-]*-all-(P)?DT)|(\([^-]*-all-(P)?DT-[^-]*.*\([^-]*-be-[^-]*)",
