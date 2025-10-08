@@ -247,8 +247,8 @@ class Gram2VecVectorizer:
     
     def _extract_sentence_count(self, doc: Doc) -> Feature:
         """Extract overall sentence count (not normalized)"""
-        sentence_count = Counter([sent for sent in doc.sents])
-        return Feature("sentence_count", sentence_count, ["count"])
+        sentence_count = len(list(doc.sents))
+        return Feature("sentence_count", Counter({"count": sentence_count}), ["count"])
     ### ^^^^^^ ###
     
     def _extract_named_entities(self, doc: Doc) -> Feature:
