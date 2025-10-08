@@ -30,7 +30,13 @@ class Feature:
         
         # Add counts for all vocab items (including zeros for missing ones)
         for item in self.vocab:
-            vector[f"{self.name}:{item}"] = self.counter.get(item, 0) / total
+            ### HANNAH ###
+            if self.vocab == ["count"]:
+                key = "count"
+                vector[f"{self.name}:{key}"] = self.counter[key]
+            ### ^^^^^^ ###
+            else:
+                vector[f"{self.name}:{item}"] = self.counter.get(item, 0) / total
             
         return vector
 
@@ -82,14 +88,16 @@ class Gram2VecVectorizer:
             "pos_bigrams": self._extract_pos_bigrams,
             "dep_labels": self._extract_dep_labels,
             "morph_tags": self._extract_morph_tags,
-            "sentences": self._extract_sentence_types,
+            "sentence_types": self._extract_sentence_types,
             "emojis": self._extract_emojis,
             "func_words": self._extract_func_words,
             "punctuation": self._extract_punctuation,
             "letters": self._extract_letters,
+            "transitions": self._extract_transition_words,
+            "unique_transitions": self._extract_unique_transitions,
             "tokens": self._extract_tokens,
             "types": self._extract_types,
-            "avg_sent_len": self._extract_avg_sent_len,
+            "sentence_count": self._extract_sentence_count,
             "named_entities": self._extract_named_entities,
             "suasive_verbs": self._extract_suasive_verbs,
             "stative_verbs": self._extract_stative_verbs,
@@ -145,7 +153,7 @@ class Gram2VecVectorizer:
                     sentence_types.append("declarative")
         
         sent_counts = Counter(sentence_types)
-        return Feature("sentences", sent_counts, self.vocabs.get("sentences", []))
+        return Feature("sentence_types", sent_counts, self.vocabs.get("sentences", []))
     
     def _extract_emojis(self, doc: Doc) -> Feature:
         """Extract emojis from text."""
@@ -171,21 +179,76 @@ class Gram2VecVectorizer:
                                if char.isalpha()])
         return Feature("letters", letter_counts, self.vocabs.get("letters", []))
     
+    ### HANNAH ###
+    def _extract_transition_words(self, doc: Doc) -> Feature:
+        """Extrat sentence-initial transition words.
+        Must be followed by a comma, but can be preceded by 'and' or 'but'"""
+        transitions = [trans.lower() for trans in self.vocabs.get("transitions", [])]
+        transition_count = 0
+        for sent in doc.sents:
+            sent_tokens = [token.text.lower() for token in sent]
+
+            for transition in transitions:
+                trans_tokens = transition.split()
+                n = len(trans_tokens)
+                # initial quotation mark is ok
+                if sent_tokens[0] in {"'", '"'}:
+                    n += 1
+
+                # starts with transition word
+                if len(sent_tokens) > n+1 and sent_tokens[:n] == trans_tokens and sent_tokens[n] == ",":
+                    transition_count += 1
+                    break
+                # starts with and/but
+                elif len(sent_tokens) > n+2 and sent_tokens[0] in {"and", "but"} and sent_tokens[1:n+1] == trans_tokens and sent_tokens[n+1] == ",":
+                    transition_count += 1
+                    break
+
+        return Feature("transitions", Counter({"count": transition_count}), ["count"])
+    
+    def _extract_unique_transitions(self, doc: Doc) -> Feature:
+        """Extract unique sentence-initial transition words."""
+        transitions = [trans.lower() for trans in self.vocabs.get("transitions", [])]
+        unique_transitions = set()
+        for sent in doc.sents:
+            sent_tokens = [token.text.lower() for token in sent]
+
+            for transition in transitions:
+                trans_tokens = transition.split()
+                n = len(trans_tokens)
+                # initial quotation mark is ok
+                if sent_tokens[0] in {"'", '"'}:
+                    n += 1
+
+                # starts with transition word
+                if len(sent_tokens) > n+1 and sent_tokens[:n] == trans_tokens and sent_tokens[n] == ",":
+                    unique_transitions.add(transition)
+                    break
+                # starts with and/but
+                elif len(sent_tokens) > n+2 and sent_tokens[0] in {"and", "but"} and sent_tokens[1:n+1] == trans_tokens and sent_tokens[n+1] == ",":
+                    unique_transitions.add(transition)
+                    break
+
+        return Feature("unique_transitions", Counter({"count": len(unique_transitions)}), ["count"])
+    ### ^^^^^^^ ###
+    
     def _extract_tokens(self, doc: Doc) -> Feature:
-        """Extract token count (normalized by document length)."""
+        """Extract token count (not normalized)."""
         # For tokens, we just return the total count as a single feature
         # This will be normalized by document length if normalize=True
         token_count = len(doc)
-        return Feature("tokens", Counter({"count": token_count}), [])
+        return Feature("tokens", Counter({"count": token_count}), ["count"]) # H: added "count" as 3rd arg
 
     ### HANNAH ###
     def _extract_types(self, doc: Doc) -> Feature:
-        """Extract type count (normalized by document length)."""
+        """Extract type count (not normalized)."""
         type_count = len({token.text.lower() for token in doc})
-        return Feature("types", Counter({"count": type_count}), [])
-        
-    def _extract_avg_sent_len():
-        return
+        return Feature("types", Counter({"count": type_count}), ["count"])
+    
+    def _extract_sentence_count(self, doc: Doc) -> Feature:
+        """Extract overall sentence count (not normalized)"""
+        sentence_count = Counter([sent for sent in doc.sents])
+        return Feature("sentence_count", sentence_count, ["count"])
     ### ^^^^^^ ###
     
     def _extract_named_entities(self, doc: Doc) -> Feature:
@@ -213,9 +276,15 @@ class Gram2VecVectorizer:
         
         # Extract all features
         feature_vectors = {}
-        for feature_name, extractor in self.registered_features.items():
-            feature = extractor(doc)
-            feature_vectors.update(feature.get_vector())
+        # for feature_name, extractor in self.registered_features.items():
+        #     feature = extractor(doc)
+        #     feature_vectors.update(feature.get_vector())
+        ### HANNAH ###
+        for feature_name in default_config.keys():
+            if feature_name in self.registered_features:
+                feature = self.registered_features[feature_name](doc)
+                feature_vectors.update(feature.get_vector())
+        ### ^^^^^^ ###
         
         return feature_vectors
     
@@ -253,14 +322,16 @@ default_config = {
     "pos_bigrams": 1,
     "dep_labels": 1,
     "morph_tags": 1,
-    "sentences": 1,
+    "sentence_types": 1,
     "emojis": 1,
     "func_words": 1,
     "punctuation": 1,
     "letters": 1,
+    "transitions": 1,
+    "unique_transitions": 1,
     "tokens": 1,
     "types": 1,
-    "avg_sent_len": 1,
+    "sentence_count": 1,
     "named_entities": 1,
     "suasive_verbs": 1,
     "stative_verbs": 1,
@@ -286,11 +357,14 @@ if __name__ == "__main__":
         "I know the answer. She believes in magic. The box contains three items. This book belongs to me. The recipe involves using fresh ingredients.",
         "He weighed the bananas carefully. The bananas weigh 2 pounds.",
         "They see this <PERSON> and that <PERSON>.",
-        "<PERSON> lives in Mexico and works at Apple Inc."
+        "However, <PERSON> lives in Mexico and works at Apple Inc. Nevertheless, he persisted. However, he died later.",
     ]
+
+    parallel_texts = ""
     
     # Vectorize documents
     vectors = vectorizer.vectorize_documents(test_texts)
+    #vectors = vectorizer.vectorize_documents(parallel_texts)
     
     # Save to CSV
     vectors.to_csv("vectorized_docs_normalized.csv", index=False)

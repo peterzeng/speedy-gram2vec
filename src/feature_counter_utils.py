@@ -32,6 +32,7 @@ from sys import stderr
 # "punct_questions", # redundant
 # "letters", 
 # "tokens", 
+# "types",
 # "named_entities",
 # "NEs_person", 
 # "NEs_location_loc",
@@ -128,7 +129,7 @@ def count_pos_bigrams(doc: Doc) -> Dict[str, int]:
 ### HANNAH ###
 def count_transition_words(doc: Doc) -> int:
     """Count sentence-initial transition words in a document"""
-    transition_count = sum(1 for token in doc) #######!!!!!
+    transition_count = sum(1 for token in doc) #######EDIT!!!!!
 # sum(1 for token in doc if token.is_stop)
     return transition_count
 
@@ -175,6 +176,13 @@ def count_punctuation(doc: Doc, punct_type: str = None) -> Union[int, Dict[str, 
             raise ValueError(f"Unknown punctuation type: {punct_type}")
     else:
         return sum(1 for token in doc if token.is_punct)
+    
+### HANNAH ###
+def count_types(doc: Doc) -> int:
+    """Count types in a document."""
+    types = {token.text.lower() for token in doc}
+    return len(types)
+### ^^^^^^ ###
 
 # Named entity counters
 def count_named_entities(doc: Doc, entity_type: str = None) -> Union[int, Dict[str, int]]:
@@ -441,6 +449,7 @@ FEATURE_EXTRACTORS = {
     "sent_punct_question": lambda doc: count_punctuation(doc, "questions"),
     "sent_punct_exclamation": lambda doc: count_punctuation(doc, "exclamations"),
     "tokens": lambda doc: len(doc),
+    "types": count_types,
     "named_entities": count_named_entities,
     "NEs_person": lambda doc: count_named_entities(doc, "person"),
     "NEs_location_loc": lambda doc: count_named_entities(doc, "location_loc"),
