@@ -19,6 +19,8 @@ from sys import stderr
 # "dep_labels", 
 # "morph_tags",
 # "pos_bigrams",
+# "transition_words",
+# "unique_transitions",
 # "sentences", 
 # "func_words", 
 # "punctuation", 
@@ -56,6 +58,7 @@ from sys import stderr
 # "avg_verb_chunk_length",
 # "avg_chars_per_token",
 # "avg_tokens_per_sentence",
+# "avg_types_per_sentence",
 
 # Generic POS tag counter
 def count_pos_tags(doc: Doc, pos_tag: str = None) -> Union[int, Dict[str, int]]:
@@ -121,6 +124,19 @@ def count_pos_bigrams(doc: Doc) -> Dict[str, int]:
     for i in range(len(doc) - 1):
         pos_bigrams.append(f"{doc[i].pos_}_{doc[i+1].pos_}")
     return dict(Counter(pos_bigrams))
+
+### HANNAH ###
+def count_transition_words(doc: Doc) -> int:
+    """Count sentence-initial transition words in a document"""
+    transition_count = sum(1 for token in doc) #######!!!!!
+# sum(1 for token in doc if token.is_stop)
+    return transition_count
+
+def count_unique_transitions(doc: Doc) -> int:
+    """Count unique sentence-initial transition words in a document"""
+    transitions = {}
+    return len(transitions)
+### ^^^^^^ ###
 
 # Sentence counter
 def count_sentences(doc: Doc) -> int:
@@ -357,14 +373,15 @@ def avg_tokens_per_sentence(doc: Doc) -> float:
         return 0.0
     return len(doc) / len(sentences)
 
-###!!!### EDIT
-def avg_ttr(self, doc: Doc) -> float:
-    """Extract type-token ratio (TTR)."""
-    token_count = len(doc)
-    type_count = len({token.text for token in doc})
-    ttr = type_count / token_count if token_count > 0 else 0.0
-    return 
-###!!!###
+### HANNAH ###
+def avg_types_per_sentence(doc: Doc) -> float:
+    """Calculate average types per sentence."""
+    sentences = list(doc.sents)
+    if not sentences:
+        return 0.0
+    type_counts = [len({token.text.lower() for token in sentence}) for sentence in sentences]
+    return sum(count for count in type_counts) / len(sentences)
+### ^^^^^^ ###
 
 def normalize_features(doc: Doc, feature_counts: Dict[str, Any]) -> Dict[str, float]:
     """
@@ -409,6 +426,8 @@ FEATURE_EXTRACTORS = {
     "dep_labels": count_dep_labels,
     "morph_tags": count_morph_tags,
     "pos_bigrams": count_pos_bigrams,
+    "transition_words": count_transition_words,
+    "unique_transitions": count_unique_transitions,
     "sentences": count_sentences,
     "func_words": count_func_words,
     "punctuation": count_punctuation,
@@ -447,6 +466,7 @@ FEATURE_EXTRACTORS = {
     "avg_verb_chunk_length": avg_verb_chunk_length,
     "avg_chars_per_token": avg_chars_per_token,
     "avg_tokens_per_sentence": avg_tokens_per_sentence,
+    "avg_types_per_sentence": avg_types_per_sentence,
     "copula_verbs": count_copula_verbs,
     "suasive_verbs": count_suasive_verbs,
     "stative_verbs": count_stative_verbs,

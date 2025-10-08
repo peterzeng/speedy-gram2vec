@@ -89,7 +89,6 @@ class Gram2VecVectorizer:
             "letters": self._extract_letters,
             "tokens": self._extract_tokens,
             "types": self._extract_types,
-            "ttr": self._extract_ttr,
             "avg_sent_len": self._extract_avg_sent_len,
             "named_entities": self._extract_named_entities,
             "suasive_verbs": self._extract_suasive_verbs,
@@ -179,12 +178,15 @@ class Gram2VecVectorizer:
         token_count = len(doc)
         return Feature("tokens", Counter({"count": token_count}), [])
 
-    ###!!!###
+    ### HANNAH ###
     def _extract_types(self, doc: Doc) -> Feature:
         """Extract type count (normalized by document length)."""
-        type_count = len({token.text for token in doc})
+        type_count = len({token.text.lower() for token in doc})
         return Feature("types", Counter({"count": type_count}), [])
-    ###!!!###
+        
+    def _extract_avg_sent_len():
+        return
+    ### ^^^^^^ ###
     
     def _extract_named_entities(self, doc: Doc) -> Feature:
         """Extract named entities."""
@@ -258,7 +260,6 @@ default_config = {
     "letters": 1,
     "tokens": 1,
     "types": 1,
-    "ttr": 1,
     "avg_sent_len": 1,
     "named_entities": 1,
     "suasive_verbs": 1,
