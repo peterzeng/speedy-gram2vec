@@ -2,12 +2,13 @@ import pandas as pd
 from pathlib import Path
 import spacy
 from spacy.tokens import Doc
-from collections import Counter
-from typing import Dict, List, Optional
+from collections import Counter, defaultdict
+from typing import Dict, List, Optional, Tuple
 from sys import stderr
 import emoji
 import sys
 import os
+from tqdm import tqdm
 
 # Add the src directory to the path to allow imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -18,51 +19,69 @@ from matcher import SyntaxRegexMatcher
 class Feature:
     """Base class for features that can be extracted from documents."""
     
-    def __init__(self, name: str, counter: Counter, vocab: Optional[List[str]] = None):
+    def __init__(self, name: str, counter: Counter, vocab: Optional[List[str]] = None, norm_total: Optional[int] = None):
         self.name = name
         self.counter = counter
         self.vocab = vocab or []
+        self.norm_total = norm_total
         
     def get_vector(self) -> Dict[str, float]:
-        """Convert counter to normalized vector with zero counts for missing vocab items."""
-        vector = {}
-        total = sum(self.counter.values()) if self.counter else 1
-        
+        """Convert counter to vector. Normalize by total unless feature is 'num_tokens'."""
+        vector: Dict[str, float] = {}
+        if self.name == "num_tokens":
+            # Emit raw token count without normalization
+            items = self.vocab or list(self.counter.keys())
+            for item in items:
+                vector[f"{self.name}:{item}"] = float(self.counter.get(item, 0))
+            return vector
+
+        # Choose normalization denominator
+        if self.norm_total is not None:
+            total = max(1, int(self.norm_total))
+        else:
+            total = sum(self.counter.values()) if self.counter else 1
         # Add counts for all vocab items (including zeros for missing ones)
         for item in self.vocab:
-            ### HANNAH ###
-            if self.vocab == ["count"]:
-                key = "count"
-                vector[f"{self.name}:{key}"] = self.counter[key]
-            ### ^^^^^^ ###
-            else:
-                vector[f"{self.name}:{item}"] = self.counter.get(item, 0) / total
-            
+            vector[f"{self.name}:{item}"] = self.counter.get(item, 0) / total
         return vector
 
 
 class Gram2VecVectorizer:
     """Main vectorizer class that implements gram2vec functionality."""
     
-    def __init__(self, language: str = "en", normalize: bool = True):
+    def __init__(self, language: str = "en", normalize: bool = True,
+                 enabled_features: Optional[Dict[str, int]] = None,
+                 spacy_model: str = "en_core_web_lg",
+                 n_process: Optional[int] = None,
+                 batch_size: int = 1000):
         self.language = language
         self.normalize = normalize
+        self.enabled_features = enabled_features or default_config
+        self.n_process = n_process
+        self.batch_size = batch_size
         
         # Load spaCy model
         if language == "en":
+            exclude = []
+            if not self.enabled_features.get("named_entities", 1):
+                exclude.append("ner")
             try:
-                self.nlp = spacy.load("en_core_web_lg")
+                self.nlp = spacy.load(spacy_model, exclude=exclude)
             except OSError:
-                print(f"Downloading spaCy language model 'en_core_web_lg'", file=stderr)
+                print(f"Downloading spaCy language model '{spacy_model}'", file=stderr)
                 from spacy.cli import download
-                download("en_core_web_lg")
-                self.nlp = spacy.load("en_core_web_lg")
+                download(spacy_model)
+                self.nlp = spacy.load(spacy_model, exclude=exclude)
         
         # Initialize sentence matcher
         self.sentence_matcher = SyntaxRegexMatcher(language)
         
         # Load vocabularies
         self.vocabs = self._load_vocabs()
+        # Cached set versions for fast membership
+        self.vocab_sets = {
+            name: set(values) for name, values in self.vocabs.items()
+        }
         
         # Register features
         self.registered_features = {}
@@ -88,16 +107,13 @@ class Gram2VecVectorizer:
             "pos_bigrams": self._extract_pos_bigrams,
             "dep_labels": self._extract_dep_labels,
             "morph_tags": self._extract_morph_tags,
-            "sentence_types": self._extract_sentence_types,
+            "sentences": self._extract_sentence_types,
             "emojis": self._extract_emojis,
             "func_words": self._extract_func_words,
             "punctuation": self._extract_punctuation,
             "letters": self._extract_letters,
-            "transitions": self._extract_transition_words,
-            "unique_transitions": self._extract_unique_transitions,
             "tokens": self._extract_tokens,
-            "types": self._extract_types,
-            "sentence_count": self._extract_sentence_count,
+            "num_tokens": self._extract_num_tokens,
             "named_entities": self._extract_named_entities,
             "suasive_verbs": self._extract_suasive_verbs,
             "stative_verbs": self._extract_stative_verbs,
@@ -109,10 +125,26 @@ class Gram2VecVectorizer:
         return Feature("pos_unigrams", pos_counts, self.vocabs.get("pos_unigrams", []))
     
     def _extract_pos_bigrams(self, doc: Doc) -> Feature:
-        """Extract POS bigrams."""
-        pos_bigrams = []
-        for i in range(len(doc) - 1):
-            pos_bigrams.append(f"{doc[i].pos_} {doc[i+1].pos_}")
+        """Extract POS bigrams using the same BOS/EOS insertion logic as gram2vec."""
+        # Reconstruct sentence spans as (start, end) indices
+        spans: List[tuple] = [(s.start, s.end) for s in doc.sents]
+        pos_tags: List[str] = [t.pos_ for t in doc]
+
+        seq: List[str] = []
+        for i, pos in enumerate(pos_tags):
+            # Insert BOS or EOS based on span boundaries (mirror gram2vec's elif ordering)
+            for start, end in spans:
+                if i == start:
+                    seq.append("BOS")
+                elif i == end:
+                    seq.append("EOS")
+            seq.append(pos)
+        # Append final EOS after all tokens
+        seq.append("EOS")
+
+        pos_bigrams: List[str] = []
+        for i in range(len(seq) - 1):
+            pos_bigrams.append(f"{seq[i]} {seq[i+1]}")
         pos_bigram_counts = Counter(pos_bigrams)
         return Feature("pos_bigrams", pos_bigram_counts, self.vocabs.get("pos_bigrams", []))
     
@@ -153,25 +185,35 @@ class Gram2VecVectorizer:
                     sentence_types.append("declarative")
         
         sent_counts = Counter(sentence_types)
-        return Feature("sentence_types", sent_counts, self.vocabs.get("sentences", []))
+        # Normalize by number of tokens to match gram2vec behavior
+        return Feature("sentences", sent_counts, self.vocabs.get("sentences", []), norm_total=len(doc))
     
     def _extract_emojis(self, doc: Doc) -> Feature:
         """Extract emojis from text."""
         # Extract emoji characters from the emoji list (each item is a dict with 'emoji' key)
         emoji_chars = [item['emoji'] for item in emoji.emoji_list(doc.text)]
         emoji_counts = Counter(emoji_chars)
-        return Feature("emojis", emoji_counts, self.vocabs.get("emojis", []))
+        # Normalize by number of tokens to match gram2vec behavior
+        return Feature("emojis", emoji_counts, self.vocabs.get("emojis", []), norm_total=len(doc))
     
     def _extract_func_words(self, doc: Doc) -> Feature:
-        """Extract function words."""
-        func_word_counts = Counter([token.text.lower() for token in doc 
-                                  if token.text.lower() in self.vocabs.get("func_words", [])])
-        return Feature("func_words", func_word_counts, self.vocabs.get("func_words", []))
+        """Extract function words (case-sensitive to match gram2vec)."""
+        vocab_list = self.vocabs.get("func_words", [])
+        vocab = set(vocab_list)
+        func_word_counts = Counter([token.text for token in doc if token.text in vocab])
+        # Normalize by number of tokens to match gram2vec behavior
+        return Feature("func_words", func_word_counts, vocab_list, norm_total=len(doc))
     
     def _extract_punctuation(self, doc: Doc) -> Feature:
-        """Extract punctuation."""
-        punct_counts = Counter([token.text for token in doc if token.is_punct])
-        return Feature("punctuation", punct_counts, self.vocabs.get("punctuation", []))
+        """Extract punctuation as character-level counts to match gram2vec behavior."""
+        vocab = set(self.vocabs.get("punctuation", []))
+        counts: Counter = Counter()
+        for token in doc:
+            text = token.text
+            for ch in text:
+                if ch in vocab:
+                    counts[ch] += 1
+        return Feature("punctuation", counts, list(vocab), norm_total=len(doc))
     
     def _extract_letters(self, doc: Doc) -> Feature:
         """Extract individual letters."""
@@ -179,77 +221,18 @@ class Gram2VecVectorizer:
                                if char.isalpha()])
         return Feature("letters", letter_counts, self.vocabs.get("letters", []))
     
-    ### HANNAH ###
-    def _extract_transition_words(self, doc: Doc) -> Feature:
-        """Extrat sentence-initial transition words.
-        Must be followed by a comma, but can be preceded by 'and' or 'but'"""
-        transitions = [trans.lower() for trans in self.vocabs.get("transitions", [])]
-        transition_count = 0
-        for sent in doc.sents:
-            sent_tokens = [token.text.lower() for token in sent]
-
-            for transition in transitions:
-                trans_tokens = transition.split()
-                n = len(trans_tokens)
-                # initial quotation mark is ok
-                if sent_tokens[0] in {"'", '"'}:
-                    n += 1
-
-                # starts with transition word
-                if len(sent_tokens) > n+1 and sent_tokens[:n] == trans_tokens and sent_tokens[n] == ",":
-                    transition_count += 1
-                    break
-                # starts with and/but
-                elif len(sent_tokens) > n+2 and sent_tokens[0] in {"and", "but"} and sent_tokens[1:n+1] == trans_tokens and sent_tokens[n+1] == ",":
-                    transition_count += 1
-                    break
-
-        return Feature("transitions", Counter({"count": transition_count}), ["count"])
-    
-    def _extract_unique_transitions(self, doc: Doc) -> Feature:
-        """Extract unique sentence-initial transition words."""
-        transitions = [trans.lower() for trans in self.vocabs.get("transitions", [])]
-        unique_transitions = set()
-        for sent in doc.sents:
-            sent_tokens = [token.text.lower() for token in sent]
-
-            for transition in transitions:
-                trans_tokens = transition.split()
-                n = len(trans_tokens)
-                # initial quotation mark is ok
-                if sent_tokens[0] in {"'", '"'}:
-                    n += 1
-
-                # starts with transition word
-                if len(sent_tokens) > n+1 and sent_tokens[:n] == trans_tokens and sent_tokens[n] == ",":
-                    unique_transitions.add(transition)
-                    break
-                # starts with and/but
-                elif len(sent_tokens) > n+2 and sent_tokens[0] in {"and", "but"} and sent_tokens[1:n+1] == trans_tokens and sent_tokens[n+1] == ",":
-                    unique_transitions.add(transition)
-                    break
-
-        return Feature("unique_transitions", Counter({"count": len(unique_transitions)}), ["count"])
-    ### ^^^^^^^ ###
-    
     def _extract_tokens(self, doc: Doc) -> Feature:
-        """Extract token count (not normalized)."""
+        """Extract token count (normalized by document length)."""
         # For tokens, we just return the total count as a single feature
         # This will be normalized by document length if normalize=True
         token_count = len(doc)
-        return Feature("tokens", Counter({"count": token_count}), ["count"]) # H: added "count" as 3rd arg
+        return Feature("tokens", Counter({"count": token_count}), [])
 
-    ### HANNAH ###
-    def _extract_types(self, doc: Doc) -> Feature:
-        """Extract type count (not normalized)."""
-        type_count = len({token.text.lower() for token in doc})
-        return Feature("types", Counter({"count": type_count}), ["count"])
-    
-    def _extract_sentence_count(self, doc: Doc) -> Feature:
-        """Extract overall sentence count (not normalized)"""
-        sentence_count = len(list(doc.sents))
-        return Feature("sentence_count", Counter({"count": sentence_count}), ["count"])
-    ### ^^^^^^ ###
+    def _extract_num_tokens(self, doc: Doc) -> Feature:
+        """Extract raw token count to match gram2vec's 'num_tokens:num_tokens' feature."""
+        token_count = len(doc)
+        # Provide vocab with the single expected key to force stable column emission
+        return Feature("num_tokens", Counter({"num_tokens": token_count}), ["num_tokens"])
     
     def _extract_named_entities(self, doc: Doc) -> Feature:
         """Extract named entities."""
@@ -276,26 +259,115 @@ class Gram2VecVectorizer:
         
         # Extract all features
         feature_vectors = {}
-        # for feature_name, extractor in self.registered_features.items():
-        #     feature = extractor(doc)
-        #     feature_vectors.update(feature.get_vector())
-        ### HANNAH ###
-        for feature_name in default_config.keys():
-            if feature_name in self.registered_features:
-                feature = self.registered_features[feature_name](doc)
-                feature_vectors.update(feature.get_vector())
-        ### ^^^^^^ ###
+        for feature_name, extractor in self.registered_features.items():
+            feature = extractor(doc)
+            feature_vectors.update(feature.get_vector())
         
         return feature_vectors
     
     def vectorize_documents(self, texts: List[str]) -> pd.DataFrame:
-        """Vectorize multiple documents."""
-        vectors = []
-        for text in texts:
-            vector = self.vectorize_document(text)
+        """Vectorize multiple documents using batched spaCy processing."""
+        vectors: List[Dict[str, float]] = []
+        # Determine processes
+        n_proc = self.n_process if self.n_process is not None else os.cpu_count()
+        for doc in tqdm(self.nlp.pipe(texts, n_process=n_proc, batch_size=self.batch_size), 
+                        total=len(texts), desc="Vectorizing documents", unit="doc"):
+            vector = self._vectorize_doc_fast(doc)
             vectors.append(vector)
-        
         return pd.DataFrame(vectors)
+
+    def _vectorize_doc_fast(self, doc: Doc) -> Dict[str, float]:
+        """Single-pass extraction for core features, fallback to existing extractors for others."""
+        token_count = len(doc)
+        # Core counters
+        pos_counts: Counter = Counter()
+        dep_counts: Counter = Counter()
+        morph_counts: Counter = Counter()
+        func_counts: Counter = Counter()
+        punct_counts: Counter = Counter()
+        letter_counts: Counter = Counter()
+
+        # Single pass over tokens
+        func_vocab = self.vocab_sets.get("func_words", set())
+        punct_vocab = self.vocab_sets.get("punctuation", set())
+        letters_vocab = self.vocab_sets.get("letters", set())
+
+        for tok in doc:
+            pos_counts[tok.pos_] += 1
+            dep_counts[tok.dep_] += 1
+            morph_str = str(tok.morph)
+            if morph_str:
+                for m in morph_str.split("|"):
+                    if m:
+                        morph_counts[m] += 1
+            text = tok.text
+            if text in func_vocab:
+                func_counts[text] += 1
+            # char-level punctuation/letters
+            for ch in text:
+                if ch in punct_vocab:
+                    punct_counts[ch] += 1
+                if ch in letters_vocab:
+                    letter_counts[ch] += 1
+
+        # POS bigrams with BOS/EOS
+        spans: List[Tuple[int, int]] = [(s.start, s.end) for s in doc.sents]
+        pos_tags: List[str] = [t.pos_ for t in doc]
+        seq: List[str] = []
+        for i, pos in enumerate(pos_tags):
+            for start, end in spans:
+                if i == start:
+                    seq.append("BOS")
+                elif i == end:
+                    seq.append("EOS")
+            seq.append(pos)
+        seq.append("EOS")
+        bigram_counts: Counter = Counter()
+        for i in range(len(seq) - 1):
+            bigram_counts[f"{seq[i]} {seq[i+1]}"] += 1
+
+        # Sentences via matcher
+        matches = self.sentence_matcher.match_document(doc)
+        sentence_types = [m.pattern_name for m in matches]
+        sent_counts = Counter(sentence_types)
+
+        # Emojis from full text
+        emoji_chars = [item['emoji'] for item in emoji.emoji_list(doc.text)]
+        emoji_counts = Counter(emoji_chars)
+
+        # Build vectors using Feature wrappers
+        vectors: Dict[str, float] = {}
+        def add_feature(name: str, counter: Counter, vocab_key: Optional[str], norm_total: Optional[int] = None):
+            if not self.enabled_features.get(name, 1):
+                return
+            vocab = self.vocabs.get(vocab_key or name, [])
+            feat = Feature(name, counter, vocab, norm_total=norm_total)
+            vectors.update(feat.get_vector())
+
+        add_feature("pos_unigrams", pos_counts, "pos_unigrams")
+        add_feature("pos_bigrams", bigram_counts, "pos_bigrams")
+        add_feature("dep_labels", dep_counts, "dep_labels")
+        add_feature("morph_tags", morph_counts, "morph_tags")
+        add_feature("func_words", func_counts, "func_words", norm_total=token_count)
+        add_feature("punctuation", punct_counts, "punctuation", norm_total=token_count)
+        add_feature("letters", letter_counts, "letters")
+        add_feature("sentences", sent_counts, "sentences", norm_total=token_count)
+        add_feature("emojis", emoji_counts, "emojis", norm_total=token_count)
+        # tokens / num_tokens
+        if self.enabled_features.get("tokens", 1):
+            vectors.update(Feature("tokens", Counter({"count": token_count}), []).get_vector())
+        if self.enabled_features.get("num_tokens", 1):
+            vectors.update(Feature("num_tokens", Counter({"num_tokens": token_count}), ["num_tokens"]).get_vector())
+
+        # Remaining features using existing methods if enabled
+        if self.enabled_features.get("named_entities", 1):
+            vectors.update(self._extract_named_entities(doc).get_vector())
+        if self.enabled_features.get("suasive_verbs", 1):
+            vectors.update(self._extract_suasive_verbs(doc).get_vector())
+        if self.enabled_features.get("stative_verbs", 1):
+            vectors.update(self._extract_stative_verbs(doc).get_vector())
+
+        return vectors
     
     def from_jsonlines(self, directory_path: str, include_content_embedding: bool = False) -> pd.DataFrame:
         """Load documents from JSONL files and vectorize them."""
@@ -303,7 +375,8 @@ class Gram2VecVectorizer:
         # For now, we'll return an empty DataFrame
         return pd.DataFrame()
     
-    def from_documents(self, documents: List[str], author_ids: List[str] = None, document_ids: List[str] = None) -> pd.DataFrame:
+    def from_documents(self, documents: List[str], author_ids: List[str] = None, 
+                      document_ids: List[str] = None) -> pd.DataFrame:
         """Vectorize documents with optional author and document IDs."""
         df = self.vectorize_documents(documents)
         
@@ -321,16 +394,12 @@ default_config = {
     "pos_bigrams": 1,
     "dep_labels": 1,
     "morph_tags": 1,
-    "sentence_types": 1,
+    "sentences": 1,
     "emojis": 1,
     "func_words": 1,
     "punctuation": 1,
     "letters": 1,
-    "transitions": 1,
-    "unique_transitions": 1,
     "tokens": 1,
-    "types": 1,
-    "sentence_count": 1,
     "named_entities": 1,
     "suasive_verbs": 1,
     "stative_verbs": 1,
@@ -356,25 +425,14 @@ if __name__ == "__main__":
         "I know the answer. She believes in magic. The box contains three items. This book belongs to me. The recipe involves using fresh ingredients.",
         "He weighed the bananas carefully. The bananas weigh 2 pounds.",
         "They see this <PERSON> and that <PERSON>.",
-        "However, <PERSON> lives in Mexico and works at Apple Inc. Nevertheless, he persisted. However, he died later.",
+        "<PERSON> lives in Mexico and works at Apple Inc."
     ]
-
-    parallel_texts = []
-    author_ids = []
-    doc_ids = []
     
     # Vectorize documents
-    #test_vectors = vectorizer.vectorize_documents(test_texts)
-    vectors = vectorizer.from_documents(parallel_texts, author_ids, doc_ids)
-
-    """
-        def from_documents(self, documents: List[str], author_ids: List[str] = None, 
-                      document_ids: List[str] = None) -> pd.DataFrame:
-    """
+    vectors = vectorizer.vectorize_documents(test_texts)
     
     # Save to CSV
-    #test_vectors.to_csv("vectorized_docs_normalized.csv", index=False)
-    vectors.to_csv("parallel_vectorized_docs.csv", index=False)
+    vectors.to_csv("vectorized_docs_normalized.csv", index=False)
     print(f"Vectorized {len(test_texts)} documents with {len(vectors.columns)} features")
     print(f"Features: {list(vectors.columns[:10])}...")  # Show first 10 features
 
