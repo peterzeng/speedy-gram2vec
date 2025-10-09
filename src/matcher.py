@@ -63,6 +63,9 @@ class SyntaxRegexMatcher:
                 # "tough_movement" : r"nsubj\)\((tough|hard|easy|tricky|difficult)-(tough|hard|easy|tricky|difficult)-JJ-acomp\([^-]*-[^-]*-VB-xcomp\(to-to-TO-aux\)",
                 # "imperative_subjectless" : r"\([^-]*-[^-]*-VB-ROOT\([^-]*-[^-]*-[^-]*-((?!nsubj).)*\)",
                 # "done_dinner" : r"\((done|finished|started)-[^-]*-[^-]*-ROOT([^-]*-[^-]*-[^-]*-nsubj.*)([^-]*-be-VBP-auxpass)\([^-]*-[^-]*-[^-]*-dobj\)"
+
+                # Hannah Construction
+                "parenthetical": r"\([^-]*-[^-]*-[^-]*-ROOT(?!(.*-VB.*))*\([^-]*-[^-]*-[^-]*-nsubj(?!(.*-VB.*))*\([^-]*-[^-]*-[^-]*-punct\).*\([^-]*-[^-]*-[^-]*-[^)]*\([^-]*-[^-]*-[^-]*-(appos|advmod|mark|prep).*\([^-]*-[^-]*-[^-]*-punct\)"
             } 
         elif language == "ru":
             # print("using russian constructions")

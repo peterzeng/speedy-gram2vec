@@ -15,6 +15,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # Import vectorizer
 from vectorizer import Gram2VecVectorizer
 
+config = {
+    
+}
 if __name__ == '__main__':
     # Load and combine parquet files
     dfs = []
@@ -47,7 +50,8 @@ if __name__ == '__main__':
     print(f"Train: {len(train_df)}, Dev: {len(dev_df)}, Test: {len(test_df)}")
 
     # Vectorize texts
-    vectorizer = Gram2VecVectorizer(language="en", normalize=True)
+    # Limit n_process to avoid "too many open files" error
+    vectorizer = Gram2VecVectorizer(language="en", normalize=True, n_process=4)
 
     print("\n=== Vectorizing training data ===")
     train_vectors = vectorizer.from_documents(train_df["text"].tolist(), author_ids=train_df["author_id"].tolist(), document_ids=train_df["doc_id"].tolist())
@@ -89,7 +93,12 @@ if __name__ == '__main__':
     coefs = np.squeeze(authorship_model.coef_)
     coefficients = pd.DataFrame({
         'Feature': X_train.columns,
-        'human': -coefs,
-        'gpt': coefs
+        'human': coefs,
+        'gpt': -coefs
     })
-    coefficients.style
+    # Rank by absolute coefficient value (most important features first)
+    coefficients['abs_coef'] = np.abs(coefs)
+    coefficients = coefficients.sort_values('abs_coef', ascending=False)
+    coefficients = coefficients.drop(columns=['abs_coef'])
+    coefficients.to_csv("coefficients.csv", index=False)
+
