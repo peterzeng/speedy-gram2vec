@@ -200,3 +200,40 @@ certain
 definite
 positive
 negative
+ 're
+ 've
+ 'll
+ 'd
+ 's
+ 't
+ am
+ are
+ as
+ because
+ did
+ doing
+ doesn
+ don
+ ain
+aren
+couldn
+didn
+hadn
+hasn
+haven
+isn
+ma
+shouldn
+wasn
+weren
+won
+wouldn
+down
+ers
+further
+having
+if
+off
+out
+until
+while
