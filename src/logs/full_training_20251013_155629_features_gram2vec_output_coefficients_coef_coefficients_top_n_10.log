@@ -1,0 +1,62 @@
+================================================================================
+Logging to: logs/full_training_20251013_155629_features_gram2vec_output_coefficients_coef_coefficients_top_n_10.log
+Started at: 2025-10-13 15:56:29
+================================================================================
+
+
+=== Using gram2vec features ===
+
+Concatenating dataframes...
+Train: 9948, Dev: 3316, Test: 3316
+Cache enabled - config hash: 79bca0d00644
+Cache directory: vector_cache
+Using English constructions
+
+=== Train data ===
+  ✓ Loading cached vectors from vectors_train_79bca0d00644.parquet
+
+=== Dev data ===
+  ✓ Loading cached vectors from vectors_dev_79bca0d00644.parquet
+
+=== Test data ===
+  ✓ Loading cached vectors from vectors_test_79bca0d00644.parquet
+
+=== Feature Selection Enabled ===
+
+=== Top 10 Features ===
+  types:count                              | coef: -3.9873
+  punctuation:.                            | coef:  1.6126
+  num_tokens:num_tokens                    | coef: -0.6491
+  tokens:count                             | coef: -0.6491
+  punctuation::                            | coef:  0.1144
+
+=== Filtering to top 10 features ===
+
+Filtered from 827 to 7 columns
+
+Filtered from 827 to 7 columns
+
+Filtered from 827 to 7 columns
+Training with 5 features (reduced from 825)
+Feature names: ['types:count', 'punctuation:.', 'num_tokens:num_tokens', 'tokens:count', 'punctuation::']
+Scaling features...
+Training logistic regression model...
+Evaluating model on test set...
+
+Classification Report:
+              precision    recall  f1-score   support
+
+         gpt       0.92      0.93      0.93      1658
+       human       0.93      0.92      0.93      1658
+
+    accuracy                           0.93      3316
+   macro avg       0.93      0.93      0.93      3316
+weighted avg       0.93      0.93      0.93      3316
+
+
+Coefficients saved to coefficients.csv
+
+================================================================================
+Completed at: 2025-10-13 15:56:35
+Log saved to: logs/full_training_20251013_155629_features_gram2vec_output_coefficients_coef_coefficients_top_n_10.log
+================================================================================
