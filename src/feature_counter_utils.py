@@ -19,6 +19,8 @@ from sys import stderr
 # "dep_labels", 
 # "morph_tags",
 # "pos_bigrams",
+# "transition_words",
+# "unique_transitions",
 # "sentences", 
 # "func_words", 
 # "punctuation", 
@@ -30,6 +32,7 @@ from sys import stderr
 # "punct_questions", # redundant
 # "letters", 
 # "tokens", 
+# "types",
 # "named_entities",
 # "NEs_person", 
 # "NEs_location_loc",
@@ -48,13 +51,15 @@ from sys import stderr
 # "token_PRP", # Personal pronoun
 # "token_superlatives", # Superlative
 # "token_comparatives", # Comparative
-# "first_second_person_pronouns", # First or second person pronoun
+# "first_person_pronouns", # First person pronoun
+# "second_person_pronouns", # Second person pronoun
 # "third_person_pronouns", # Third person pronoun
 # "pronoun_it",
 # "avg_noun_chunk_length",
 # "avg_verb_chunk_length",
 # "avg_chars_per_token",
 # "avg_tokens_per_sentence",
+# "avg_types_per_sentence",
 
 # Generic POS tag counter
 def count_pos_tags(doc: Doc, pos_tag: str = None) -> Union[int, Dict[str, int]]:
@@ -121,6 +126,19 @@ def count_pos_bigrams(doc: Doc) -> Dict[str, int]:
         pos_bigrams.append(f"{doc[i].pos_}_{doc[i+1].pos_}")
     return dict(Counter(pos_bigrams))
 
+### HANNAH ###
+def count_transition_words(doc: Doc) -> int:
+    """Count sentence-initial transition words in a document"""
+    transition_count = sum(1 for token in doc) #######EDIT!!!!!
+# sum(1 for token in doc if token.is_stop)
+    return transition_count
+
+def count_unique_transitions(doc: Doc) -> int:
+    """Count unique sentence-initial transition words in a document"""
+    transitions = {}
+    return len(transitions)
+### ^^^^^^ ###
+
 # Sentence counter
 def count_sentences(doc: Doc) -> int:
     """Count sentences in a document."""
@@ -158,6 +176,13 @@ def count_punctuation(doc: Doc, punct_type: str = None) -> Union[int, Dict[str, 
             raise ValueError(f"Unknown punctuation type: {punct_type}")
     else:
         return sum(1 for token in doc if token.is_punct)
+    
+### HANNAH ###
+def count_types(doc: Doc) -> int:
+    """Count types in a document."""
+    types = {token.text.lower() for token in doc}
+    return len(types)
+### ^^^^^^ ###
 
 # Named entity counters
 def count_named_entities(doc: Doc, entity_type: str = None) -> Union[int, Dict[str, int]]:
@@ -245,12 +270,16 @@ def count_copula_verbs(doc: Doc) -> int:
     return sum(1 for token in doc if token.lemma_ == "be" and (any(child.dep_ in ["attr", "acomp"] for child in token.children))) 
 
 # Pronoun counters
-def count_first_second_person_pronouns(doc: Doc) -> int:
-    """Count first and second person pronouns."""
-    first_second_pronouns = ["i", "me", "my", "mine", "myself", 
-                            "we", "us", "our", "ours", "ourselves",
-                            "you", "your", "yours", "yourself", "yourselves"]
-    return sum(1 for token in doc if token.text.lower() in first_second_pronouns)
+def count_first_person_pronouns(doc: Doc) -> int:
+    """Count first person pronouns."""
+    first_person_pronouns = ["i", "me", "my", "mine", "myself",
+                            "we", "us", "our", "ours", "ourselves"]
+    return sum(1 for token in doc if token.text.lower() in first_person_pronouns)
+
+def count_second_person_pronouns(doc: Doc) -> int:
+    """Count second person pronouns."""
+    second_person_pronouns = ["you", "your", "yours", "yourself", "yourselves"]
+    return sum(1 for token in doc if token.text.lower() in second_person_pronouns)
 
 def count_third_person_pronouns(doc: Doc) -> int:
     """Count third person pronouns."""
@@ -352,6 +381,16 @@ def avg_tokens_per_sentence(doc: Doc) -> float:
         return 0.0
     return len(doc) / len(sentences)
 
+### HANNAH ###
+def avg_types_per_sentence(doc: Doc) -> float:
+    """Calculate average types per sentence."""
+    sentences = list(doc.sents)
+    if not sentences:
+        return 0.0
+    type_counts = [len({token.text.lower() for token in sentence}) for sentence in sentences]
+    return sum(count for count in type_counts) / len(sentences)
+### ^^^^^^ ###
+
 def normalize_features(doc: Doc, feature_counts: Dict[str, Any]) -> Dict[str, float]:
     """
     Normalize feature counts by the total number of tokens in the document.
@@ -395,6 +434,8 @@ FEATURE_EXTRACTORS = {
     "dep_labels": count_dep_labels,
     "morph_tags": count_morph_tags,
     "pos_bigrams": count_pos_bigrams,
+    "transition_words": count_transition_words,
+    "unique_transitions": count_unique_transitions,
     "sentences": count_sentences,
     "func_words": count_func_words,
     "punctuation": count_punctuation,
@@ -408,6 +449,7 @@ FEATURE_EXTRACTORS = {
     "sent_punct_question": lambda doc: count_punctuation(doc, "questions"),
     "sent_punct_exclamation": lambda doc: count_punctuation(doc, "exclamations"),
     "tokens": lambda doc: len(doc),
+    "types": count_types,
     "named_entities": count_named_entities,
     "NEs_person": lambda doc: count_named_entities(doc, "person"),
     "NEs_location_loc": lambda doc: count_named_entities(doc, "location_loc"),
@@ -425,13 +467,15 @@ FEATURE_EXTRACTORS = {
     "token_FW": count_FW,
     "token_PRP": count_PRP,
     "token_superlatives": count_superlatives,
-    "first_second_person_pronouns": count_first_second_person_pronouns,
+    "first_person_pronouns": count_first_person_pronouns,
+    "second_person_pronouns": count_second_person_pronouns,
     "third_person_pronouns": count_third_person_pronouns,
     "pronoun_it": count_pronoun_it,
     "avg_noun_chunk_length": avg_noun_chunk_length,
     "avg_verb_chunk_length": avg_verb_chunk_length,
     "avg_chars_per_token": avg_chars_per_token,
     "avg_tokens_per_sentence": avg_tokens_per_sentence,
+    "avg_types_per_sentence": avg_types_per_sentence,
     "copula_verbs": count_copula_verbs,
     "suasive_verbs": count_suasive_verbs,
     "stative_verbs": count_stative_verbs,
