@@ -110,8 +110,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train logistic regression classifier with gram2vec or elfen features')
     parser.add_argument('--features', '-f', choices=['gram2vec', 'elfen'], default='gram2vec',
                         help='Feature extraction method to use (default: gram2vec)')
-    parser.add_argument('--output', '-o', default='coefficients.csv',
-                        help='Output CSV file for coefficients (default: coefficients.csv)')
     parser.add_argument('--coef-file', '-c', default=None,
                         help='Path to coefficients.csv from a previous training run (enables feature selection)')
     parser.add_argument('--top-n', '-n', type=int, default=10,
@@ -130,6 +128,8 @@ if __name__ == '__main__':
                         help='Disable logging to file')
     parser.add_argument('--list-logs', action='store_true',
                         help='List recent log files and exit')
+    parser.add_argument('--output', '-o', default=None,
+                        help='Output CSV file for coefficients (default: coefficients.csv)')
     args = parser.parse_args()
     
     # Handle log listing
@@ -148,6 +148,7 @@ if __name__ == '__main__':
         clear_cache(cache_dir)
         exit(0)
     
+    args.output = args.output if args.output else f"top_{args.top_n}_features_coefficients.csv"
     # Setup logging
     logger = None
     log_file = None
@@ -309,6 +310,7 @@ if __name__ == '__main__':
             'human': coefs,
             'gpt': -coefs
         })
+
         # Rank by absolute coefficient value (most important features first)
         coefficients['abs_coef'] = np.abs(coefs)
         coefficients = coefficients.sort_values('abs_coef', ascending=False)
