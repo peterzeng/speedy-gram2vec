@@ -515,7 +515,7 @@ if __name__ == "__main__":
         "Apple Inc. announced a new product yesterday.",
         "She is a doctor. The sky was blue. They are happy.",
         "What is the capital of France??!",
-        "I suggest you try the new restaurant. The manager insists that you order the special. We recommend the chocolate cake for dessert.",
+        "I suggest you try twhe new restaurant. The manager insists that you order the special. We recommend the chocolate cake for dessert.",
         "I know the answer. She believes in magic. The box contains three items. This book belongs to me. The recipe involves using fresh ingredients.",
         "He weighed the bananas carefully. The bananas weigh 2 pounds.",
         "They see this <PERSON> and that <PERSON>.",
