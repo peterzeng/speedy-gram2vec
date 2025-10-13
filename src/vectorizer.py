@@ -40,13 +40,14 @@ class Feature:
         if self.norm_total is not None:
             total = max(1, int(self.norm_total))
         else:
-            total = sum(self.counter.values()) if self.counter else 1
+            total = max(1, sum(self.counter.values()) if self.counter else 1)
         # Add counts for all vocab items (including zeros for missing ones)
         for item in self.vocab:
             if self.vocab == ["count"]:
                 key = "count"
                 vector[f"{self.name}:{key}"] = self.counter[key]
-            vector[f"{self.name}:{item}"] = self.counter.get(item, 0) / total
+            else:
+                vector[f"{self.name}:{item}"] = self.counter.get(item, 0) / total
         return vector
 
 
@@ -234,7 +235,7 @@ class Gram2VecVectorizer:
         # For tokens, we just return the total count as a single feature
         # This will be normalized by document length if normalize=True
         token_count = len(doc)
-        return Feature("tokens", Counter({"count": token_count}), [])
+        return Feature("tokens", Counter({"count": token_count}), ["count"])
 
     def _extract_num_tokens(self, doc: Doc) -> Feature:
         """Extract raw token count to match gram2vec's 'num_tokens:num_tokens' feature."""
@@ -426,7 +427,7 @@ class Gram2VecVectorizer:
         add_feature("emojis", emoji_counts, "emojis", norm_total=token_count)
         # tokens / num_tokens
         if self.enabled_features.get("tokens", 1):
-            vectors.update(Feature("tokens", Counter({"count": token_count}), []).get_vector())
+            vectors.update(Feature("tokens", Counter({"count": token_count}), ["count"]).get_vector())
         if self.enabled_features.get("num_tokens", 1):
             vectors.update(Feature("num_tokens", Counter({"num_tokens": token_count}), ["num_tokens"]).get_vector())
 
