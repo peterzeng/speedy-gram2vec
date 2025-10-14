@@ -1,0 +1,151 @@
+================================================================================
+Logging to: logs/cross_eval_20251014_163114_train_cap_test_hape_per_llm_True_cap_source_local.log
+Started at: 2025-10-14 16:31:14
+================================================================================
+
+================================================================================
+Cross-Dataset Evaluation (Gram2Vec + Logistic Regression)
+================================================================================
+
+Loading training data from CAP (local parquets)...
+Loading test data from HAP-E...
+Train size: 67305 | Test size: 58030
+Train label counts: {'llm': 57690, 'human': 9615}
+Test  label counts: {'llm': 49740, 'human': 8290}
+
+Cache enabled - config hash: 79bca0d00644
+Cache directory: /home/pezeng1/dev/gram2vec/speedy-gram2vec/vector_cache_cross/cap_to_hape
+Using English constructions
+
+Per-LLM evaluation over: ['gpt-4o', 'gpt-4o-mini', 'llama-3-70b-base', 'llama-3-70b-instruct', 'llama-3-8b-base', 'llama-3-8b-instruct']
+
+Category: gpt-4o | Train: 19230 | Test: 16580
+
+=== Train_cap_to_hape_gpt-4o data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_to_hape_gpt-4o_79bca0d00644.parquet
+
+=== Test_cap_to_hape_gpt-4o data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_to_hape_gpt-4o_79bca0d00644.parquet
+
+[cap_to_hape_gpt-4o] Accuracy: 0.9740
+              precision    recall  f1-score   support
+
+       human     0.9545    0.9954    0.9745      8290
+         llm     0.9952    0.9526    0.9734      8290
+
+    accuracy                         0.9740     16580
+   macro avg     0.9749    0.9740    0.9740     16580
+weighted avg     0.9749    0.9740    0.9740     16580
+
+
+Category: gpt-4o-mini | Train: 19230 | Test: 16580
+
+=== Train_cap_to_hape_gpt-4o-mini data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_to_hape_gpt-4o-mini_79bca0d00644.parquet
+
+=== Test_cap_to_hape_gpt-4o-mini data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_to_hape_gpt-4o-mini_79bca0d00644.parquet
+
+[cap_to_hape_gpt-4o-mini] Accuracy: 0.9917
+              precision    recall  f1-score   support
+
+       human     0.9974    0.9860    0.9917      8290
+         llm     0.9862    0.9975    0.9918      8290
+
+    accuracy                         0.9917     16580
+   macro avg     0.9918    0.9917    0.9917     16580
+weighted avg     0.9918    0.9917    0.9917     16580
+
+
+Category: llama-3-70b-base | Train: 19230 | Test: 16580
+
+=== Train_cap_to_hape_llama-3-70b-base data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_to_hape_llama-3-70b-base_79bca0d00644.parquet
+
+=== Test_cap_to_hape_llama-3-70b-base data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_to_hape_llama-3-70b-base_79bca0d00644.parquet
+
+[cap_to_hape_llama-3-70b-base] Accuracy: 0.8460
+              precision    recall  f1-score   support
+
+       human     0.7937    0.9350    0.8586      8290
+         llm     0.9209    0.7569    0.8309      8290
+
+    accuracy                         0.8460     16580
+   macro avg     0.8573    0.8460    0.8447     16580
+weighted avg     0.8573    0.8460    0.8447     16580
+
+
+Category: llama-3-70b-instruct | Train: 19230 | Test: 16580
+
+=== Train_cap_to_hape_llama-3-70b-instruct data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_to_hape_llama-3-70b-instruct_79bca0d00644.parquet
+
+=== Test_cap_to_hape_llama-3-70b-instruct data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_to_hape_llama-3-70b-instruct_79bca0d00644.parquet
+
+[cap_to_hape_llama-3-70b-instruct] Accuracy: 0.9388
+              precision    recall  f1-score   support
+
+       human     0.9162    0.9661    0.9405      8290
+         llm     0.9641    0.9116    0.9371      8290
+
+    accuracy                         0.9388     16580
+   macro avg     0.9402    0.9388    0.9388     16580
+weighted avg     0.9402    0.9388    0.9388     16580
+
+
+Category: llama-3-8b-base | Train: 19230 | Test: 16580
+
+=== Train_cap_to_hape_llama-3-8b-base data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_to_hape_llama-3-8b-base_79bca0d00644.parquet
+
+=== Test_cap_to_hape_llama-3-8b-base data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_to_hape_llama-3-8b-base_79bca0d00644.parquet
+
+[cap_to_hape_llama-3-8b-base] Accuracy: 0.8841
+              precision    recall  f1-score   support
+
+       human     0.8492    0.9341    0.8897      8290
+         llm     0.9268    0.8341    0.8780      8290
+
+    accuracy                         0.8841     16580
+   macro avg     0.8880    0.8841    0.8838     16580
+weighted avg     0.8880    0.8841    0.8838     16580
+
+
+Category: llama-3-8b-instruct | Train: 19230 | Test: 16580
+
+=== Train_cap_to_hape_llama-3-8b-instruct data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_to_hape_llama-3-8b-instruct_79bca0d00644.parquet
+
+=== Test_cap_to_hape_llama-3-8b-instruct data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_to_hape_llama-3-8b-instruct_79bca0d00644.parquet
+
+[cap_to_hape_llama-3-8b-instruct] Accuracy: 0.9818
+              precision    recall  f1-score   support
+
+       human     0.9771    0.9867    0.9819      8290
+         llm     0.9866    0.9768    0.9817      8290
+
+    accuracy                         0.9818     16580
+   macro avg     0.9818    0.9818    0.9818     16580
+weighted avg     0.9818    0.9818    0.9818     16580
+
+
+================================================================================
+Completed at: 2025-10-14 17:54:39
+Log saved to: logs/cross_eval_20251014_163114_train_cap_test_hape_per_llm_True_cap_source_local.log
+================================================================================

@@ -30,7 +30,7 @@ def get_config_hash(config: Dict, include_items: Optional[list] = None) -> str:
     return hashlib.md5(config_str.encode()).hexdigest()[:12]
 
 
-def get_cache_path(cache_dir: Path, split_name: str, config_hash: str) -> Path:
+def get_cache_path(cache_dir: Path, split_name: str, config_hash: str, feature_tag: Optional[str] = None) -> Path:
     """
     Get the cache file path for a specific dataset split.
     
@@ -43,6 +43,9 @@ def get_cache_path(cache_dir: Path, split_name: str, config_hash: str) -> Path:
         Path to cache file
     """
     cache_dir.mkdir(parents=True, exist_ok=True)
+    # Include optional feature tag (e.g., 'elfen' or 'gram2vec') for clarity
+    if feature_tag:
+        return cache_dir / f"vectors_{feature_tag}_{split_name}_{config_hash}.parquet"
     return cache_dir / f"vectors_{split_name}_{config_hash}.parquet"
 
 
@@ -86,7 +89,7 @@ def cache_exists(cache_dir: Path, split_name: str, config_hash: str) -> bool:
     Returns:
         True if cache exists, False otherwise
     """
-    cache_path = get_cache_path(cache_dir, split_name, config_hash)
+    cache_path = get_cache_path(cache_dir, split_name, config_hash, feature_tag="gram2vec")
     return cache_path.exists()
 
 
@@ -154,7 +157,8 @@ def get_or_extract_vectors(
     
     # Generate cache hash based on config
     config_hash = get_config_hash(config)
-    cache_path = get_cache_path(cache_dir, split_name, config_hash)
+    # Use explicit feature tag to avoid name errors and keep filenames clear
+    cache_path = get_cache_path(cache_dir, split_name, config_hash, feature_tag="gram2vec")
     
     # Try to load from cache
     print(f"\n=== {split_name.capitalize()} data ===")
@@ -218,3 +222,43 @@ def print_cache_info(cache_dir: Path) -> None:
             size_mb = f.stat().st_size / 1024 / 1024
             print(f"      - {f.name} ({size_mb:.2f} MB)")
 
+
+def get_or_extract_with_callable(
+    df: pd.DataFrame,
+    split_name: str,
+    extractor_fn,
+    extractor_config: Dict,
+    cache_dir: Path,
+    use_cache: bool = True,
+):
+    """
+    Generic cache helper that either loads a cached dataframe for the given split
+    and config, or calls the provided extractor function and caches its result.
+
+    Args:
+        df: Input dataframe (used only for messaging; extractor_fn must close over it)
+        split_name: 'train' | 'dev' | 'test'
+        extractor_fn: Zero-arg callable returning a pandas DataFrame with vectors
+        extractor_config: Dict used to compute cache hash
+        cache_dir: Directory for caches
+        use_cache: Whether to use caching
+
+    Returns:
+        pandas DataFrame of feature vectors
+    """
+    if not use_cache:
+        print(f"\n=== {split_name.capitalize()} data (cache disabled) ===")
+        return extractor_fn()
+
+    config_hash = get_config_hash(extractor_config)
+    cache_path = get_cache_path(cache_dir, split_name, config_hash)
+
+    print(f"\n=== {split_name.capitalize()} data ===")
+    cached = load_vectors(cache_path)
+    if cached is not None:
+        return cached
+
+    print("  Cache miss - extracting features...")
+    result_df = extractor_fn()
+    save_vectors(result_df, cache_path)
+    return result_df

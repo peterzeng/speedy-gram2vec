@@ -1,0 +1,23 @@
+================================================================================
+Logging to: logs/full_training_20251014_093743_features_elfen_output_top_10_features_coefficients.log
+Started at: 2025-10-14 09:37:43
+================================================================================
+
+
+=== Using elfen features ===
+
+Concatenating dataframes...
+Train: 9948, Dev: 3316, Test: 3316
+Cache enabled - config hash: a1f90f38b1ca
+Cache directory: vector_cache
+
+=== Extracting elfen features from training data ===
+
+=== Train data ===
+  Cache miss - extracting features...
+Extracting elfen features from 9948 documents...
+
+================================================================================
+Completed at: 2025-10-14 09:37:44
+Log saved to: logs/full_training_20251014_093743_features_elfen_output_top_10_features_coefficients.log
+================================================================================

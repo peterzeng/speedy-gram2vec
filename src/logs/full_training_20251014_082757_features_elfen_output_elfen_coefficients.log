@@ -1,0 +1,18 @@
+================================================================================
+Logging to: logs/full_training_20251014_082757_features_elfen_output_elfen_coefficients.log
+Started at: 2025-10-14 08:27:57
+================================================================================
+
+
+=== Using elfen features ===
+
+Concatenating dataframes...
+Train: 9948, Dev: 3316, Test: 3316
+
+=== Extracting elfen features from training data ===
+Extracting elfen features from 9948 documents...
+
+================================================================================
+Completed at: 2025-10-14 08:36:17
+Log saved to: logs/full_training_20251014_082757_features_elfen_output_elfen_coefficients.log
+================================================================================

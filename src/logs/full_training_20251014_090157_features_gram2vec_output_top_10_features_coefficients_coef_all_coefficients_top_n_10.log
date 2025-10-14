@@ -1,0 +1,67 @@
+================================================================================
+Logging to: logs/full_training_20251014_090157_features_gram2vec_output_top_10_features_coefficients_coef_all_coefficients_top_n_10.log
+Started at: 2025-10-14 09:01:57
+================================================================================
+
+
+=== Using gram2vec features ===
+
+Concatenating dataframes...
+Train: 9948, Dev: 3316, Test: 3316
+Cache enabled - config hash: 79bca0d00644
+Cache directory: vector_cache
+Using English constructions
+
+=== Train data ===
+  ✓ Loading cached vectors from vectors_train_79bca0d00644.parquet
+
+=== Dev data ===
+  ✓ Loading cached vectors from vectors_dev_79bca0d00644.parquet
+
+=== Test data ===
+  ✓ Loading cached vectors from vectors_test_79bca0d00644.parquet
+
+=== Feature Selection Enabled ===
+
+=== Top 10 Features ===
+  types:count                              | coef: -1.0507
+  tokens:count                             | coef: -0.8413
+  punctuation:.                            | coef:  0.5320
+  dep_labels:advcl                         | coef: -0.4749
+  punctuation::                            | coef: -0.4742
+  pos_bigrams:ADJ ADJ                      | coef:  0.4629
+  punctuation:-                            | coef:  0.4582
+  punctuation:;                            | coef:  0.4492
+  func_words:which                         | coef:  0.4352
+  punctuation:!                            | coef:  0.4291
+
+=== Filtering to top 10 features ===
+
+Filtered from 827 to 12 columns
+
+Filtered from 827 to 12 columns
+
+Filtered from 827 to 12 columns
+Training with 10 features (reduced from 825)
+Feature names: ['types:count', 'tokens:count', 'punctuation:.', 'dep_labels:advcl', 'punctuation::', 'pos_bigrams:ADJ ADJ', 'punctuation:-', 'punctuation:;', 'func_words:which', 'punctuation:!']
+Scaling features...
+Training logistic regression model...
+Evaluating model on test set...
+
+Classification Report:
+              precision    recall  f1-score   support
+
+         gpt       0.96      0.95      0.96      1658
+       human       0.95      0.96      0.96      1658
+
+    accuracy                           0.96      3316
+   macro avg       0.96      0.96      0.96      3316
+weighted avg       0.96      0.96      0.96      3316
+
+
+Coefficients saved to top_10_features_coefficients.csv
+
+================================================================================
+Completed at: 2025-10-14 09:02:03
+Log saved to: logs/full_training_20251014_090157_features_gram2vec_output_top_10_features_coefficients_coef_all_coefficients_top_n_10.log
+================================================================================

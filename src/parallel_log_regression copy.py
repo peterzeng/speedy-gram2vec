@@ -10,7 +10,6 @@ import os
 import sys
 from tqdm import tqdm
 import argparse
-import time
 
 # Add the src directory to the path to allow imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -18,134 +17,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # Import vectorizer
 from vectorizer import Gram2VecVectorizer
 from elfen.extractor import Extractor
-from utils.cache_utils import get_or_extract_vectors, print_cache_info, clear_cache, get_config_hash, get_or_extract_with_callable
+from utils.cache_utils import get_or_extract_vectors, print_cache_info, clear_cache, get_config_hash
 from utils.log_utils import generate_log_filename, start_logging, stop_logging, list_logs
 
-# Custom ELFEN config: enable all features except the slow avg_num_synsets
-ELFEN_CUSTOM_CONFIG = {
-    "backbone": "spacy",
-    "language": "en",
-    "model": "en_core_web_sm",
-    "max_length": 10000,
-    "text_column": "text",
-    "remove_constant_cols":False,
-    "features": {
-        # Surface-level features
-        "surface": [
-            "raw_sequence_length",
-            "n_tokens",
-            "n_sentences",
-            "n_tokens_per_sentence",
-            "n_characters",
-            "avg_word_length",
-            "n_types",
-            "n_long_words",
-            "n_lemmas",
-        ],
-        # POS-related
-        "pos": [
-            "n_lexical_tokens",
-            "pos_variability",
-            "n_per_pos",
-        ],
-        # Morphology (UD)
-        "morphological": [
-            "n_per_morph_feature",
-        ],
-        # Dependency/chunks
-        "dependency": [
-            "tree_width",
-            "tree_depth",
-            "tree_branching",
-            "n_noun_chunks",
-            "n_per_dependency_type",
-        ],
-        # Emotion (VAD + intensity)
-        "emotion": [
-            "avg_valence", "n_low_valence", "n_high_valence",
-            "avg_arousal", "n_low_arousal", "n_high_arousal",
-            "avg_dominance", "n_low_dominance", "n_high_dominance",
-            "avg_emotion_intensity", "n_low_intensity", "n_high_intensity",
-        ],
-        # Sentiment
-        "sentiment": [
-            "sentiment_score",
-            "n_negative_sentiment",
-            "n_positive_sentiment",
-        ],
-        # Psycholinguistic resources
-        "psycholinguistic": [
-            # Concreteness
-            "avg_concreteness", "n_low_concreteness", "n_high_concreteness",
-            "avg_sd_concreteness", "n_controversial_concreteness",
-            # Age of Acquisition
-            "avg_aoa", "n_low_aoa", "n_high_aoa",
-            "avg_sd_aoa", "n_controversial_aoa",
-            # Prevalence
-            "avg_prevalence", "n_low_prevalence", "n_high_prevalence",
-            # Socialness
-            "avg_socialness", "n_low_socialness", "n_high_socialness",
-            "avg_sd_socialness", "n_controversial_socialness",
-            # Sensorimotor
-            "avg_sensorimotor", "n_low_sensorimotor", "n_high_sensorimotor",
-            "avg_sd_sensorimotor", "n_controversial_sensorimotor",
-            # Iconicity
-            "avg_iconicity", "n_low_iconicity", "n_high_iconicity",
-            "avg_sd_iconicity", "n_controversial_iconicity",
-        ],
-        # Lexical richness/diversity
-        "lexical_richness": [
-            "lemma_token_ratio",
-            "ttr", "rttr", "cttr",
-            "herdan_c", "summer_index", "dugast_u", "maas_index",
-            "lexical_density",
-            "n_hapax_legomena",
-            "n_global_token_hapax_legomena",
-            "n_global_lemma_hapax_legomena",
-            "n_hapax_dislegomena",
-            "n_global_token_hapax_dislegomena",
-            "n_global_lemma_hapax_dislegomena",
-            "sichel_s",
-            "global_sichel_s",
-            "giroud_index",
-            "mtld", "hdd", "mattr", "msttr",
-            "yule_k", "simpsons_d", "herdan_v",
-        ],
-        # Information-theoretic
-        "complexity": [
-            "compressibility",
-            "entropy",
-        ],
-        # Readability
-        "readability": [
-            "n_syllables", "n_monosyllables", "n_polysyllables",
-            "flesch_reading_ease",
-            "flesch_kincaid_grade",
-            "gunning_fog",
-            "ari",
-            "smog",
-            "cli",
-            "lix",
-            "rix",
-        ],
-        # Hedges
-        "hedges": [
-            "n_hedges",
-        ],
-        # Entities
-        "entities": [
-            "n_entities",
-            "n_per_entity_type",
-        ],
-        # WordNet/synsets (EXCLUDING avg_num_synsets)
-        "wordnet": [
-            # "avg_num_synsets",  # intentionally excluded (slow)
-            # "n_low_synsets",
-            # "n_high_synsets",
-            # "n_high_synsets_per_pos",
-            # "n_low_synsets_per_pos",
-        ],
-    },
+config = {
+    
 }
 
 def select_top_features(coef_file: str, n_features: int = 10):
@@ -207,16 +83,8 @@ def filter_feature_columns(df: pd.DataFrame, feature_names: list, keep_meta_cols
     return df[cols_to_keep]
 
 
-def extract_elfen_features(
-    df,
-    text_col="text",
-    doc_id_col="doc_id",
-    author_id_col="author_id",
-    batch_size: int = 100,
-    show_progress: bool = True,
-    elfen_config: dict | None = None,
-):
-    """Extract elfen features from a dataframe, optionally in batches with progress."""
+def extract_elfen_features(df, text_col="text", doc_id_col="doc_id", author_id_col="author_id"):
+    """Extract elfen features from a dataframe"""
     print(f"Extracting elfen features from {len(df)} documents...")
     
     # Convert to polars if needed
@@ -228,38 +96,14 @@ def extract_elfen_features(
     # Rename columns to what Extractor expects
     pl_df = pl_df.rename({text_col: "text", doc_id_col: "documentID", author_id_col: "authorID"})
     
-    total_rows = pl_df.height
-    if batch_size is None or batch_size <= 0 or batch_size >= total_rows:
-        # Single shot
-        cfg = elfen_config if elfen_config is not None else ELFEN_CUSTOM_CONFIG
-        extractor = Extractor(data=pl_df, config=cfg)
-        extractor.extract_features()
-        df_out = extractor.data.to_pandas()
-        # Keep only numeric features and essential metadata columns for training
-        meta_cols = ["authorID", "documentID"]
-        numeric_cols = df_out.select_dtypes(include=[np.number]).columns.tolist()
-        cols_to_keep = [c for c in meta_cols if c in df_out.columns] + [c for c in numeric_cols if c not in meta_cols]
-        return df_out[cols_to_keep]
+    # Initialize extractor and extract features
+    extractor = Extractor(data=pl_df)
+    extractor.extract_features()
     
-    # Batched extraction with tqdm
-    results = []
-    iterator = range(0, total_rows, batch_size)
-    if show_progress:
-        iterator = tqdm(iterator, desc="Elfen batches", unit="batch")
-    for start in iterator:
-        end = min(start + batch_size, total_rows)
-        batch_pl = pl_df.slice(start, end - start)
-        cfg = elfen_config if elfen_config is not None else ELFEN_CUSTOM_CONFIG
-        extractor = Extractor(data=batch_pl, config=cfg)
-        extractor.extract_features()
-        batch_df = extractor.data.to_pandas()
-        # Keep only numeric features and essential metadata columns for training
-        meta_cols = ["authorID", "documentID"]
-        numeric_cols = batch_df.select_dtypes(include=[np.number]).columns.tolist()
-        cols_to_keep = [c for c in meta_cols if c in batch_df.columns] + [c for c in numeric_cols if c not in meta_cols]
-        results.append(batch_df[cols_to_keep])
+    # Convert back to pandas for consistency with gram2vec pipeline
+    result_df = extractor.data.to_pandas()
     
-    return pd.concat(results, ignore_index=True)
+    return result_df
 
 if __name__ == '__main__':
     # Parse command-line arguments
@@ -286,10 +130,6 @@ if __name__ == '__main__':
                         help='List recent log files and exit')
     parser.add_argument('--output', '-o', default=None,
                         help='Output CSV file for coefficients (default: coefficients.csv)')
-    parser.add_argument('--elfen-benchmark', type=int, default=None,
-                        help='Benchmark elfen extraction on N documents and exit')
-    parser.add_argument('--elfen-batch-size', type=int, default=100,
-                        help='Batch size for elfen feature extraction (default: 100)')
     args = parser.parse_args()
     
     # Handle log listing
@@ -364,19 +204,6 @@ if __name__ == '__main__':
         )
         print(f"Train: {len(train_df)}, Dev: {len(dev_df)}, Test: {len(test_df)}")
 
-        # Optional quick benchmark for elfen feature extraction
-        if args.elfen_benchmark and args.features == 'elfen':
-            n_docs = min(args.elfen_benchmark, len(df))
-            sample_df = df.sample(n_docs, random_state=42)
-            print(f"\n=== Benchmarking elfen extraction on {n_docs} documents ===")
-            start_time = time.perf_counter()
-            _ = extract_elfen_features(sample_df, batch_size=args.elfen_batch_size, elfen_config=ELFEN_CUSTOM_CONFIG)
-            total_time = time.perf_counter() - start_time
-            per_doc = total_time / max(n_docs, 1)
-            print(f"Completed in {total_time:.2f}s ({per_doc:.3f}s/doc)")
-            # Exit after benchmark
-            sys.exit(0)
-
         # Extract features based on selected method
         if args.features == 'gram2vec':
             default_config = {
@@ -425,43 +252,12 @@ if __name__ == '__main__':
             )
         
         elif args.features == 'elfen':
-            # Reuse cache flags for elfen
-            use_cache = not args.no_cache
-            if use_cache:
-                elfen_cache_config = {"features": "elfen", "batch_size": args.elfen_batch_size, "feature_config": ELFEN_CUSTOM_CONFIG}
-                config_hash = get_config_hash(elfen_cache_config)
-                print(f"Cache enabled - config hash: {config_hash}")
-                print(f"Cache directory: {cache_dir}")
-            else:
-                print("Cache disabled - will re-extract all elfen features")
-
             print("\n=== Extracting elfen features from training data ===")
-            train_vectors = get_or_extract_with_callable(
-                train_df,
-                "train",
-                extractor_fn=lambda: extract_elfen_features(train_df, batch_size=args.elfen_batch_size, elfen_config=ELFEN_CUSTOM_CONFIG),
-                extractor_config={"features": "elfen", "batch_size": args.elfen_batch_size, "feature_config": ELFEN_CUSTOM_CONFIG},
-                cache_dir=cache_dir,
-                use_cache=use_cache,
-            )
+            train_vectors = extract_elfen_features(train_df)
             print("\n=== Extracting elfen features from dev data ===")
-            dev_vectors = get_or_extract_with_callable(
-                dev_df,
-                "dev",
-                extractor_fn=lambda: extract_elfen_features(dev_df, batch_size=args.elfen_batch_size, elfen_config=ELFEN_CUSTOM_CONFIG),
-                extractor_config={"features": "elfen", "batch_size": args.elfen_batch_size, "feature_config": ELFEN_CUSTOM_CONFIG},
-                cache_dir=cache_dir,
-                use_cache=use_cache,
-            )
+            dev_vectors = extract_elfen_features(dev_df)
             print("\n=== Extracting elfen features from test data ===")
-            test_vectors = get_or_extract_with_callable(
-                test_df,
-                "test",
-                extractor_fn=lambda: extract_elfen_features(test_df, batch_size=args.elfen_batch_size, elfen_config=ELFEN_CUSTOM_CONFIG),
-                extractor_config={"features": "elfen", "batch_size": args.elfen_batch_size, "feature_config": ELFEN_CUSTOM_CONFIG},
-                cache_dir=cache_dir,
-                use_cache=use_cache,
-            )
+            test_vectors = extract_elfen_features(test_df)
 
         # Apply feature selection if coef_file is provided
         if args.coef_file:

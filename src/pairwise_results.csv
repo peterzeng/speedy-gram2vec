@@ -1,0 +1,7 @@
+LLM,Training,Test,n_train,n_test
+gpt-4o,100.0%,99.6%,13264,3316
+gpt-4o-mini,100.0%,99.8%,13264,3316
+llama-3-70b-base,92.1%,89.9%,13264,3316
+llama-3-70b-instruct,99.9%,99.1%,13264,3316
+llama-3-8b-base,94.3%,93.1%,13264,3316
+llama-3-8b-instruct,99.8%,98.8%,13264,3316
