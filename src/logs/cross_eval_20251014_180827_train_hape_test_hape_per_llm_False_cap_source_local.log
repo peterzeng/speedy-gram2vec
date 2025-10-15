@@ -1,0 +1,42 @@
+================================================================================
+Logging to: logs/cross_eval_20251014_180827_train_hape_test_hape_per_llm_False_cap_source_local.log
+Started at: 2025-10-14 18:08:27
+================================================================================
+
+================================================================================
+Cross-Dataset Evaluation (Gram2Vec + Logistic Regression)
+================================================================================
+
+Loading full dataset from HAP-E for intra-dataset split...
+Performed stratified intra-dataset split with test_size=0.2, seed=42
+Train size: 46424 | Test size: 11606
+Train label counts: {'llm': 39792, 'human': 6632}
+Test  label counts: {'llm': 9948, 'human': 1658}
+
+Cache enabled - config hash: 79bca0d00644
+Cache directory: vector_cache_cross
+Using English constructions
+
+=== Train_hape_intra_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_hape_intra_80_seed42_79bca0d00644.parquet
+
+=== Test_hape_intra_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_hape_intra_80_seed42_79bca0d00644.parquet
+
+[hape_intra_80_seed42] Accuracy: 0.9462
+              precision    recall  f1-score   support
+
+       human     0.8272    0.7883    0.8073      1658
+         llm     0.9650    0.9726    0.9688      9948
+
+    accuracy                         0.9462     11606
+   macro avg     0.8961    0.8804    0.8880     11606
+weighted avg     0.9453    0.9462    0.9457     11606
+
+
+================================================================================
+Completed at: 2025-10-14 18:32:18
+Log saved to: logs/cross_eval_20251014_180827_train_hape_test_hape_per_llm_False_cap_source_local.log
+================================================================================

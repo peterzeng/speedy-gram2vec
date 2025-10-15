@@ -1,0 +1,151 @@
+================================================================================
+Logging to: logs/cross_eval_20251014_215451_train_cap_test_cap_per_llm_True_cap_source_local.log
+Started at: 2025-10-14 21:54:51
+================================================================================
+
+================================================================================
+Cross-Dataset Evaluation (Gram2Vec + Logistic Regression)
+================================================================================
+
+Loading full dataset from CAP (local parquets) for intra-dataset split...
+Performed stratified intra-dataset split with test_size=0.2, seed=42
+Train size: 53844 | Test size: 13461
+Train label counts: {'llm': 46152, 'human': 7692}
+Test  label counts: {'llm': 11538, 'human': 1923}
+
+Cache enabled - config hash: 79bca0d00644
+Cache directory: vector_cache_cross
+Using English constructions
+
+Per-LLM intra-dataset evaluation over: ['gpt-4o', 'gpt-4o-mini', 'llama-3-70b-base', 'llama-3-70b-instruct', 'llama-3-8b-base', 'llama-3-8b-instruct']
+
+Category: gpt-4o | Train: 15384 | Test: 3846
+
+=== Train_cap_intra_gpt-4o_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_intra_gpt-4o_80_seed42_79bca0d00644.parquet
+
+=== Test_cap_intra_gpt-4o_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_intra_gpt-4o_80_seed42_79bca0d00644.parquet
+
+[cap_intra_gpt-4o_80_seed42] Accuracy: 0.9977
+              precision    recall  f1-score   support
+
+       human     0.9984    0.9969    0.9977      1923
+         llm     0.9969    0.9984    0.9977      1923
+
+    accuracy                         0.9977      3846
+   macro avg     0.9977    0.9977    0.9977      3846
+weighted avg     0.9977    0.9977    0.9977      3846
+
+
+Category: gpt-4o-mini | Train: 15384 | Test: 3846
+
+=== Train_cap_intra_gpt-4o-mini_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_intra_gpt-4o-mini_80_seed42_79bca0d00644.parquet
+
+=== Test_cap_intra_gpt-4o-mini_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_intra_gpt-4o-mini_80_seed42_79bca0d00644.parquet
+
+[cap_intra_gpt-4o-mini_80_seed42] Accuracy: 0.9977
+              precision    recall  f1-score   support
+
+       human     0.9979    0.9974    0.9977      1923
+         llm     0.9974    0.9979    0.9977      1923
+
+    accuracy                         0.9977      3846
+   macro avg     0.9977    0.9977    0.9977      3846
+weighted avg     0.9977    0.9977    0.9977      3846
+
+
+Category: llama-3-70b-base | Train: 15384 | Test: 3846
+
+=== Train_cap_intra_llama-3-70b-base_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_intra_llama-3-70b-base_80_seed42_79bca0d00644.parquet
+
+=== Test_cap_intra_llama-3-70b-base_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_intra_llama-3-70b-base_80_seed42_79bca0d00644.parquet
+
+[cap_intra_llama-3-70b-base_80_seed42] Accuracy: 0.9022
+              precision    recall  f1-score   support
+
+       human     0.8936    0.9132    0.9033      1923
+         llm     0.9112    0.8913    0.9012      1923
+
+    accuracy                         0.9022      3846
+   macro avg     0.9024    0.9022    0.9022      3846
+weighted avg     0.9024    0.9022    0.9022      3846
+
+
+Category: llama-3-70b-instruct | Train: 15384 | Test: 3846
+
+=== Train_cap_intra_llama-3-70b-instruct_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_intra_llama-3-70b-instruct_80_seed42_79bca0d00644.parquet
+
+=== Test_cap_intra_llama-3-70b-instruct_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_intra_llama-3-70b-instruct_80_seed42_79bca0d00644.parquet
+
+[cap_intra_llama-3-70b-instruct_80_seed42] Accuracy: 0.9844
+              precision    recall  f1-score   support
+
+       human     0.9824    0.9865    0.9844      1923
+         llm     0.9864    0.9823    0.9844      1923
+
+    accuracy                         0.9844      3846
+   macro avg     0.9844    0.9844    0.9844      3846
+weighted avg     0.9844    0.9844    0.9844      3846
+
+
+Category: llama-3-8b-base | Train: 15384 | Test: 3846
+
+=== Train_cap_intra_llama-3-8b-base_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_intra_llama-3-8b-base_80_seed42_79bca0d00644.parquet
+
+=== Test_cap_intra_llama-3-8b-base_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_intra_llama-3-8b-base_80_seed42_79bca0d00644.parquet
+
+[cap_intra_llama-3-8b-base_80_seed42] Accuracy: 0.9217
+              precision    recall  f1-score   support
+
+       human     0.9142    0.9308    0.9224      1923
+         llm     0.9296    0.9126    0.9210      1923
+
+    accuracy                         0.9217      3846
+   macro avg     0.9219    0.9217    0.9217      3846
+weighted avg     0.9219    0.9217    0.9217      3846
+
+
+Category: llama-3-8b-instruct | Train: 15384 | Test: 3846
+
+=== Train_cap_intra_llama-3-8b-instruct_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_intra_llama-3-8b-instruct_80_seed42_79bca0d00644.parquet
+
+=== Test_cap_intra_llama-3-8b-instruct_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_intra_llama-3-8b-instruct_80_seed42_79bca0d00644.parquet
+
+[cap_intra_llama-3-8b-instruct_80_seed42] Accuracy: 0.9844
+              precision    recall  f1-score   support
+
+       human     0.9829    0.9860    0.9844      1923
+         llm     0.9859    0.9828    0.9844      1923
+
+    accuracy                         0.9844      3846
+   macro avg     0.9844    0.9844    0.9844      3846
+weighted avg     0.9844    0.9844    0.9844      3846
+
+
+================================================================================
+Completed at: 2025-10-14 22:47:33
+Log saved to: logs/cross_eval_20251014_215451_train_cap_test_cap_per_llm_True_cap_source_local.log
+================================================================================

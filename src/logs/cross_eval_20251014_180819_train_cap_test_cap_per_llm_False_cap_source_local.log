@@ -1,0 +1,42 @@
+================================================================================
+Logging to: logs/cross_eval_20251014_180819_train_cap_test_cap_per_llm_False_cap_source_local.log
+Started at: 2025-10-14 18:08:19
+================================================================================
+
+================================================================================
+Cross-Dataset Evaluation (Gram2Vec + Logistic Regression)
+================================================================================
+
+Loading full dataset from CAP (local parquets) for intra-dataset split...
+Performed stratified intra-dataset split with test_size=0.2, seed=42
+Train size: 53844 | Test size: 13461
+Train label counts: {'llm': 46152, 'human': 7692}
+Test  label counts: {'llm': 11538, 'human': 1923}
+
+Cache enabled - config hash: 79bca0d00644
+Cache directory: vector_cache_cross
+Using English constructions
+
+=== Train_cap_intra_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_train_cap_intra_80_seed42_79bca0d00644.parquet
+
+=== Test_cap_intra_80_seed42 data ===
+  Cache miss - extracting features...
+  ✓ Cached vectors to vectors_gram2vec_test_cap_intra_80_seed42_79bca0d00644.parquet
+
+[cap_intra_80_seed42] Accuracy: 0.9452
+              precision    recall  f1-score   support
+
+       human     0.8342    0.7691    0.8003      1923
+         llm     0.9620    0.9745    0.9682     11538
+
+    accuracy                         0.9452     13461
+   macro avg     0.8981    0.8718    0.8843     13461
+weighted avg     0.9438    0.9452    0.9442     13461
+
+
+================================================================================
+Completed at: 2025-10-14 18:36:33
+Log saved to: logs/cross_eval_20251014_180819_train_cap_test_cap_per_llm_False_cap_source_local.log
+================================================================================
